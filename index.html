@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지v3</h1>
+    <h1>자이로스코프 감지</h1>
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
     <p id="timer">00:00.00</p>
@@ -21,7 +21,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
         import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
-        // 🔹 Firebase 설정 정보 (Firebase Console에서 복사)
         const firebaseConfig = {
             apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
             authDomain: "ineedrest-1c987.firebaseapp.com",
@@ -33,7 +32,6 @@
             measurementId: "G-XBM8PZDMW2"
         };
 
-        // 🔹 Firebase 초기화
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -41,7 +39,12 @@
         let initialGamma = null;
         let startTime;
         let timerInterval;
-        let isTimerStopped = false; // ✅ 중복 실행 방지 플래그
+        let isTimerStopped = false; // ✅ 중복 실행 방지 변수
+
+        // ✅ "처음으로" 버튼 클릭 후 다시 로드될 때 초기화
+        window.onload = function () {
+            isTimerStopped = false;
+        };
 
         document.getElementById("startSensor").addEventListener("click", function() {
             if (typeof DeviceOrientationEvent.requestPermission === "function") {
@@ -74,8 +77,8 @@
         }
 
         function stopTimer() {
-            if (isTimerStopped) return; // ✅ 이미 실행된 경우 중복 실행 방지
-            isTimerStopped = true; // ✅ 한 번 실행 후 중복 실행 방지
+            if (isTimerStopped) return; // ✅ 중복 실행 방지
+            isTimerStopped = true; // ✅ 실행 상태 설정
 
             clearInterval(timerInterval);
             let elapsedTime = (performance.now() - startTime) / 1000;
@@ -86,10 +89,7 @@
             let finalTime = `${minutes}:${seconds}.${milliseconds}`;
             localStorage.setItem("stoppedTime", finalTime);
 
-            // ✅ Firebase에 데이터 저장
             saveScore(finalTime);
-
-            // Failed 페이지로 이동
             window.location.href = "failed.html";
         }
 
@@ -107,7 +107,7 @@
                 const gammaChange = Math.abs(gamma - initialGamma);
 
                 if (betaChange > 1 || gammaChange > 1) {
-                    stopTimer(); // 🚀 이제 한 번만 실행됨!
+                    stopTimer();
                 }
             });
         }
