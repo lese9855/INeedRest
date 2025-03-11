@@ -4,22 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>자이로스코프 감지</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        #data {
-            font-size: 20px;
-            font-weight: bold;
-        }
-        #timer {
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 10px;
-            color: red;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #data { font-size: 20px; font-weight: bold; }
+        #timer { font-size: 24px; font-weight: bold; margin-top: 10px; color: red; }
     </style>
 </head>
 <body>
@@ -53,15 +43,15 @@
         });
 
         function startTimer() {
-            startTime = performance.now(); // 고정밀 시간 측정
+            startTime = performance.now();
             timerInterval = setInterval(() => {
-                let elapsedTime = (performance.now() - startTime) / 1000; // 밀리초 → 초 변환
+                let elapsedTime = (performance.now() - startTime) / 1000;
                 let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
                 let seconds = String(Math.floor(elapsedTime % 60)).padStart(2, '0');
-                let milliseconds = String((elapsedTime % 1).toFixed(2).substring(2)).padStart(2, '0'); // 소수점 두 자리
+                let milliseconds = String((elapsedTime % 1).toFixed(2).substring(2)).padStart(2, '0');
 
                 document.getElementById("timer").innerText = `${minutes}:${seconds}.${milliseconds}`;
-            }, 10); // 10ms 간격으로 업데이트 (소수점 2자리 유지)
+            }, 10);
         }
 
         function stopTimer() {
@@ -71,7 +61,11 @@
             let seconds = String(Math.floor(elapsedTime % 60)).padStart(2, '0');
             let milliseconds = String((elapsedTime % 1).toFixed(2).substring(2)).padStart(2, '0');
 
-            localStorage.setItem("stoppedTime", `${minutes}:${seconds}.${milliseconds}`);
+            let finalTime = `${minutes}:${seconds}.${milliseconds}`;
+            localStorage.setItem("stoppedTime", finalTime);
+
+            // Firebase 저장
+            saveScore(finalTime);
         }
 
         function startGyroscope() {
@@ -79,8 +73,7 @@
                 const beta = event.beta ? event.beta.toFixed(2) : 0;
                 const gamma = event.gamma ? event.gamma.toFixed(2) : 0;
 
-                document.getElementById("data").innerText = 
-                    `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
+                document.getElementById("data").innerText = `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
 
                 if (initialBeta === null) initialBeta = beta;
                 if (initialGamma === null) initialGamma = gamma;
@@ -93,6 +86,11 @@
                     window.location.href = "failed.html";
                 }
             });
+        }
+
+        function saveScore(time) {
+            const db = firebase.database();
+            db.ref("scores").push({ time: time });
         }
     </script>
 </body>
