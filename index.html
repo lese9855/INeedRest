@@ -11,26 +11,32 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지1</h1>
+    <h1>자이로스코프 감지</h1>
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
     <p id="timer">00:00.00</p>
+
+    <!-- Firebase SDK 모듈 방식 -->
     <script type="module">
+        // Firebase 모듈 가져오기
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+        // 🔹 Firebase 설정 정보 (Firebase Console에서 복사)
         const firebaseConfig = {
-          apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
-          authDomain: "ineedrest-1c987.firebaseapp.com",
-          databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
-          projectId: "ineedrest-1c987",
-          storageBucket: "ineedrest-1c987.firebasestorage.app",
-          messagingSenderId: "1076501106165",
-          appId: "1:1076501106165:web:970dfee4b57b95c41f64bc",
-          measurementId: "G-XBM8PZDMW2"
+            apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
+            authDomain: "ineedrest-1c987.firebaseapp.com",
+            databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
+            projectId: "ineedrest-1c987",
+            storageBucket: "ineedrest-1c987.firebasestorage.app",
+            messagingSenderId: "1076501106165",
+            appId: "1:1076501106165:web:970dfee4b57b95c41f64bc",
+            measurementId: "G-XBM8PZDMW2"
         };
+
         // 🔹 Firebase 초기화
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         let initialBeta = null;
         let initialGamma = null;
@@ -104,7 +110,7 @@
         }
 
         function saveScore(time) {
-            db.ref("scores").push({ time: time });
+            push(ref(db, "scores"), { time: time });
         }
     </script>
 </body>
