@@ -29,8 +29,8 @@
     <p id="timer">00:00</p>
 
     <script>
-        let lastBeta = null;
-        let lastGamma = null;
+        let initialBeta = null;
+        let initialGamma = null;
         let startTime;
         let timerInterval;
 
@@ -67,29 +67,28 @@
             let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
             let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
             let seconds = String(elapsedTime % 60).padStart(2, '0');
-            localStorage.setItem("stoppedTime", `${minutes}:${seconds}`); // 실패 시간 저장
+            localStorage.setItem("stoppedTime", `${minutes}:${seconds}`);
         }
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
-                const beta = event.beta ? event.beta.toFixed(2) : 0;    // x축 기울기
-                const gamma = event.gamma ? event.gamma.toFixed(2) : 0; // y축 기울기
+                const beta = event.beta ? event.beta.toFixed(2) : 0;    
+                const gamma = event.gamma ? event.gamma.toFixed(2) : 0;  
 
                 document.getElementById("data").innerText = 
                     `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
 
-                if (lastBeta !== null && lastGamma !== null) {
-                    const betaChange = Math.abs(beta - lastBeta);
-                    const gammaChange = Math.abs(gamma - lastGamma);
+                if (initialBeta === null) initialBeta = beta;
+                if (initialGamma === null) initialGamma = gamma;
 
-                    if (betaChange > 1 || gammaChange > 1) {
-                        stopTimer();
-                        window.location.href = "failed.html";
-                    }
+                // 누적된 변화량 계산
+                const betaChange = Math.abs(beta - initialBeta);
+                const gammaChange = Math.abs(gamma - initialGamma);
+
+                if (betaChange > 1 || gammaChange > 1) {
+                    stopTimer();
+                    window.location.href = "failed.html";
                 }
-
-                lastBeta = beta;
-                lastGamma = gamma;
             });
         }
     </script>
