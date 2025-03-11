@@ -26,7 +26,7 @@
     <h1>자이로스코프 감지</h1>
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
-    <p id="timer">00:00</p>
+    <p id="timer">00:00.00</p>
 
     <script>
         let initialBeta = null;
@@ -53,27 +53,31 @@
         });
 
         function startTimer() {
-            startTime = Date.now();
+            startTime = performance.now(); // 고정밀 시간 측정
             timerInterval = setInterval(() => {
-                let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                let elapsedTime = (performance.now() - startTime) / 1000; // 밀리초 → 초 변환
                 let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
-                let seconds = String(elapsedTime % 60).padStart(2, '0');
-                document.getElementById("timer").innerText = `${minutes}:${seconds}`;
-            }, 1000);
+                let seconds = String(Math.floor(elapsedTime % 60)).padStart(2, '0');
+                let milliseconds = String((elapsedTime % 1).toFixed(2).substring(2)).padStart(2, '0'); // 소수점 두 자리
+
+                document.getElementById("timer").innerText = `${minutes}:${seconds}.${milliseconds}`;
+            }, 10); // 10ms 간격으로 업데이트 (소수점 2자리 유지)
         }
 
         function stopTimer() {
             clearInterval(timerInterval);
-            let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            let elapsedTime = (performance.now() - startTime) / 1000;
             let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
-            let seconds = String(elapsedTime % 60).padStart(2, '0');
-            localStorage.setItem("stoppedTime", `${minutes}:${seconds}`);
+            let seconds = String(Math.floor(elapsedTime % 60)).padStart(2, '0');
+            let milliseconds = String((elapsedTime % 1).toFixed(2).substring(2)).padStart(2, '0');
+
+            localStorage.setItem("stoppedTime", `${minutes}:${seconds}.${milliseconds}`);
         }
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
-                const beta = event.beta ? event.beta.toFixed(2) : 0;    
-                const gamma = event.gamma ? event.gamma.toFixed(2) : 0;  
+                const beta = event.beta ? event.beta.toFixed(2) : 0;
+                const gamma = event.gamma ? event.gamma.toFixed(2) : 0;
 
                 document.getElementById("data").innerText = 
                     `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
@@ -81,7 +85,6 @@
                 if (initialBeta === null) initialBeta = beta;
                 if (initialGamma === null) initialGamma = gamma;
 
-                // 누적된 변화량 계산
                 const betaChange = Math.abs(beta - initialBeta);
                 const gammaChange = Math.abs(gamma - initialGamma);
 
