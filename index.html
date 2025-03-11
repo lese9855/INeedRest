@@ -14,22 +14,32 @@
             font-size: 20px;
             font-weight: bold;
         }
+        #timer {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: red;
+        }
     </style>
 </head>
 <body>
     <h1>자이로스코프 감지</h1>
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
+    <p id="timer">00:00</p>
 
     <script>
         let lastBeta = null;
         let lastGamma = null;
+        let startTime;
+        let timerInterval;
 
         document.getElementById("startSensor").addEventListener("click", function() {
             if (typeof DeviceOrientationEvent.requestPermission === "function") {
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
                         if (permissionState === "granted") {
+                            startTimer();
                             startGyroscope();
                         } else {
                             alert("자이로스코프 접근이 거부되었습니다.");
@@ -37,9 +47,28 @@
                     })
                     .catch(console.error);
             } else {
+                startTimer();
                 startGyroscope();
             }
         });
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
+                let seconds = String(elapsedTime % 60).padStart(2, '0');
+                document.getElementById("timer").innerText = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
+            let seconds = String(elapsedTime % 60).padStart(2, '0');
+            localStorage.setItem("stoppedTime", `${minutes}:${seconds}`); // 실패 시간 저장
+        }
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
@@ -54,6 +83,7 @@
                     const gammaChange = Math.abs(gamma - lastGamma);
 
                     if (betaChange > 1 || gammaChange > 1) {
+                        stopTimer();
                         window.location.href = "failed.html";
                     }
                 }
