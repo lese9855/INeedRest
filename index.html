@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자이로스코프 센서 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #data {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>스마트폰 자이로스코프 센서</h1>
+    <button id="startSensor">센서 활성화</button>
+    <p id="data">데이터 없음</p>
+
+    <script>
+        let lastGamma = null;
+        let lastAlpha = null;
+        const threshold = 1; // 변화 감지 임계값
+
+        // 센서 활성화 요청 (iOS 13+에서 필요)
+        document.getElementById("startSensor").addEventListener("click", function() {
+            if (typeof DeviceOrientationEvent.requestPermission === "function") {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === "granted") {
+                            startGyroscope();
+                        } else {
+                            alert("자이로스코프 접근이 거부되었습니다.");
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                startGyroscope(); // 안드로이드는 요청 없이 실행 가능
+            }
+        });
+
+        function startGyroscope() {
+            window.addEventListener("deviceorientation", function(event) {
+                const alpha = event.alpha ? event.alpha.toFixed(2) : 0;  // z축 (방위각)
+                const beta = event.beta ? event.beta.toFixed(2) : 0;    // x축 (기울기)
+                const gamma = event.gamma ? event.gamma.toFixed(2) : 0; // y축 (좌우 회전)
+
+                document.getElementById("data").innerText = 
+                    `Alpha (z축): ${alpha}°\nBeta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
+
+                // 자이로스코프 변화 감지
+                if (lastGamma !== null && lastAlpha !== null) {
+                    if (Math.abs(lastGamma - gamma) > threshold || Math.abs(lastAlpha - alpha) > threshold) {
+                        window.location.href = "failed.html"; // "Failed" 페이지로 이동
+                    }
+                }
+
+                // 이전 값 저장
+                lastGamma = gamma;
+                lastAlpha = alpha;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Failed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #retry {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #retry:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚠ Failed ⚠</h1>
+    <p>자이로스코프 변동이 감지되었습니다.</p>
+    <button id="retry" onclick="location.href='index.html'">처음 화면으로 돌아가기</button>
+</body>
+</html>
