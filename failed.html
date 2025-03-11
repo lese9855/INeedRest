@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>실패 - 다시 시도</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         button { padding: 10px 20px; font-size: 18px; cursor: pointer; margin-top: 20px; }
@@ -18,17 +16,19 @@
     <h2>🏆 랭킹 (Top 10) 🏆</h2>
     <ol id="leaderboard"></ol>
     <button onclick="location.href='index.html'">처음으로</button>
-
-    <script>
-        // 🔹 Firebase 설정 정보
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
         const firebaseConfig = {
-            apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
-            authDomain: "ineedrest-1c987.firebaseapp.com",
-            databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
-            projectId: "ineedrest-1c987",
-            storageBucket: "ineedrest-1c987.firebasestorage.app",
-            messagingSenderId: "1076501106165",
-            appId: "1:1076501106165:web:970dfee4b57b95c41f64bc"
+          apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
+          authDomain: "ineedrest-1c987.firebaseapp.com",
+          databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
+          projectId: "ineedrest-1c987",
+          storageBucket: "ineedrest-1c987.firebasestorage.app",
+          messagingSenderId: "1076501106165",
+          appId: "1:1076501106165:web:970dfee4b57b95c41f64bc",
+          measurementId: "G-XBM8PZDMW2"
         };
 
         // 🔹 Firebase 초기화
