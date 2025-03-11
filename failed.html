@@ -8,91 +8,30 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 20px;
+            padding: 50px;
+            background-color: #ffdddd;
         }
-        #retry {
-            margin-top: 20px;
+        h1 {
+            color: red;
+        }
+        button {
             padding: 10px 20px;
             font-size: 18px;
+            margin-top: 20px;
+            cursor: pointer;
             background-color: red;
             color: white;
             border: none;
-            cursor: pointer;
             border-radius: 5px;
         }
-        #retry:hover {
+        button:hover {
             background-color: darkred;
         }
     </style>
 </head>
 <body>
-    <h1>⚠ Failed ⚠</h1>
-    <p>자이로스코프 변동이 감지되었습니다.</p>
-    <button id="retry" onclick="location.href='index.html'">처음 화면으로 돌아가기</button>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자이로스코프 테스트</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        #data {
-            font-size: 20px;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <h1>스마트폰 자이로스코프 센서</h1>
-    <button id="startSensor">센서 활성화</button>
-    <p id="data">데이터 없음</p>
-
-    <script>
-        let lastBeta = null;
-        let lastGamma = null;
-
-        document.getElementById("startSensor").addEventListener("click", function() {
-            if (typeof DeviceOrientationEvent.requestPermission === "function") {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === "granted") {
-                            startGyroscope();
-                        } else {
-                            alert("자이로스코프 접근이 거부되었습니다.");
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                startGyroscope();
-            }
-        });
-
-        function startGyroscope() {
-            window.addEventListener("deviceorientation", function(event) {
-                const beta = event.beta ? event.beta.toFixed(2) : 0;    // x축 (기울기)
-                const gamma = event.gamma ? event.gamma.toFixed(2) : 0; // y축 (좌우 회전)
-
-                document.getElementById("data").innerText = 
-                    `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
-
-                // 1도 이상 변화 감지
-                if (lastBeta !== null && lastGamma !== null) {
-                    if (Math.abs(lastBeta - beta) > 1 || Math.abs(lastGamma - gamma) > 1) {
-                        window.location.href = "failed.html"; // 실패 페이지로 이동
-                    }
-                }
-
-                lastBeta = beta;
-                lastGamma = gamma;
-            });
-        }
-    </script>
+    <h1>Failed!</h1>
+    <p>기기가 움직였습니다. 다시 시도해주세요.</p>
+    <button onclick="location.href='index.html'">처음으로 돌아가기</button>
 </body>
 </html>
