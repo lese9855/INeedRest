@@ -19,6 +19,21 @@
     <p id="timer">00:00.00</p>
 
     <script>
+        // 🔹 Firebase 설정 정보
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
+            authDomain: "ineedrest-1c987.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+            projectId: "ineedrest-1c987",
+            storageBucket: "ineedrest-1c987.firebasestorage.app",
+            messagingSenderId: "1076501106165",
+            appId: "1:1076501106165:web:970dfee4b57b95c41f64bc"
+        };
+
+        // 🔹 Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         let initialBeta = null;
         let initialGamma = null;
         let startTime;
@@ -64,8 +79,11 @@
             let finalTime = `${minutes}:${seconds}.${milliseconds}`;
             localStorage.setItem("stoppedTime", finalTime);
 
-            // Firebase 저장
+            // Firebase에 점수 저장
             saveScore(finalTime);
+
+            // Failed 페이지로 이동
+            window.location.href = "failed.html";
         }
 
         function startGyroscope() {
@@ -83,13 +101,11 @@
 
                 if (betaChange > 1 || gammaChange > 1) {
                     stopTimer();
-                    window.location.href = "failed.html";
                 }
             });
         }
 
         function saveScore(time) {
-            const db = firebase.database();
             db.ref("scores").push({ time: time });
         }
     </script>
