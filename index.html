@@ -15,7 +15,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지</h1>
+    <h1>자이로스코프 감지v10</h1>
 
     <!-- 닉네임 입력 필드 -->
     <div id="nicknameContainer">
@@ -91,10 +91,28 @@
 
         window.onload = resetState;
         document.getElementById("startSensor").addEventListener("click", function() {
-            resetState();
-            startTimer();
-            startGyroscope();
+            requestSensorPermission();
         });
+
+        async function requestSensorPermission() {
+            if (typeof DeviceOrientationEvent.requestPermission === "function") {
+                try {
+                    const permissionState = await DeviceOrientationEvent.requestPermission();
+                    if (permissionState === "granted") {
+                        startTimer();
+                        startGyroscope();
+                    } else {
+                        alert("센서 접근이 거부되었습니다.");
+                    }
+                } catch (error) {
+                    console.error("센서 권한 요청 실패:", error);
+                    alert("센서 접근을 허용해주세요.");
+                }
+            } else {
+                startTimer();
+                startGyroscope();
+            }
+        }
 
         function startTimer() {
             startTime = performance.now();
@@ -126,8 +144,7 @@
                 isScoreSaved = true;
             }
 
-            // ✅ "Failed" 메시지를 현재 페이지에 표시
-            document.getElementById("sensorContainer").style.display = "none"; // 센서 관련 UI 숨김
+            document.getElementById("sensorContainer").style.display = "none";
             document.getElementById("failedMessage").style.display = "block";
             document.getElementById("retryButton").style.display = "block";
         }
@@ -147,10 +164,10 @@
             window.addEventListener("deviceorientation", function(event) {
                 if (isTimerStopped) return;
 
-                const beta = event.beta ? event.beta.toFixed(2) : 0;
-                const gamma = event.gamma ? event.gamma.toFixed(2) : 0;
+                const beta = event.beta;
+                const gamma = event.gamma;
 
-                document.getElementById("data").innerText = `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
+                document.getElementById("data").innerText = `Beta (x축): ${beta.toFixed(2)}°\nGamma (y축): ${gamma.toFixed(2)}°`;
 
                 if (initialBeta === null) initialBeta = beta;
                 if (initialGamma === null) initialGamma = gamma;
