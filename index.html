@@ -11,13 +11,13 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지</h1>
+    <h1>자이로스코프 감지v7</h1>
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
     <p id="timer">00:00.00</p>
 
     <script type="module">
-        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
         import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
         const firebaseConfig = {
@@ -31,7 +31,7 @@
             measurementId: "G-XBM8PZDMW2"
         };
 
-        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+        const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
         let initialBeta = null;
@@ -41,28 +41,14 @@
         let isTimerStopped = false;
         let isScoreSaved = false;
 
-        // ✅ "처음으로" 버튼 클릭 후 다시 로드될 때 초기화
         window.onload = function () {
             isTimerStopped = false;
             isScoreSaved = false;
         };
 
         document.getElementById("startSensor").addEventListener("click", function() {
-            if (typeof DeviceOrientationEvent.requestPermission === "function") {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === "granted") {
-                            startTimer();
-                            startGyroscope();
-                        } else {
-                            alert("자이로스코프 접근이 거부되었습니다.");
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                startTimer();
-                startGyroscope();
-            }
+            startTimer();
+            startGyroscope();
         });
 
         function startTimer() {
@@ -102,16 +88,11 @@
             window.addEventListener("deviceorientation", function(event) {
                 if (isTimerStopped) return;
 
-                const beta = event.beta ? event.beta.toFixed(2) : 0;
-                const gamma = event.gamma ? event.gamma.toFixed(2) : 0;
+                const betaChange = Math.abs(event.beta - (initialBeta ?? event.beta));
+                const gammaChange = Math.abs(event.gamma - (initialGamma ?? event.gamma));
 
-                document.getElementById("data").innerText = `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
-
-                if (initialBeta === null) initialBeta = beta;
-                if (initialGamma === null) initialGamma = gamma;
-
-                const betaChange = Math.abs(beta - initialBeta);
-                const gammaChange = Math.abs(gamma - initialGamma);
+                if (initialBeta === null) initialBeta = event.beta;
+                if (initialGamma === null) initialGamma = event.gamma;
 
                 if (betaChange > 1 || gammaChange > 1) {
                     stopTimer();
@@ -120,11 +101,11 @@
         }
 
         function saveScore(time) {
-            try {
-                push(ref(db, "scores"), { time: time });
-            } catch (error) {
-                console.error("Firebase 저장 오류:", error);
-            }
+            push(ref(db, "scores"), { time: time }).then(() => {
+                console.log("✅ Firebase 저장 성공:", time);
+            }).catch(error => {
+                console.error("❌ Firebase 저장 실패:", error);
+            });
         }
     </script>
 </body>
