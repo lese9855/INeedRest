@@ -6,15 +6,34 @@
     <title>자이로스코프 감지</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        #data { font-size: 20px; font-weight: bold; }
+        #nicknameContainer, #sensorContainer { margin-top: 20px; }
+        #nicknameInput { padding: 10px; font-size: 16px; }
+        #startSensor, #retryButton { display: none; padding: 10px 20px; font-size: 18px; cursor: pointer; }
         #timer { font-size: 24px; font-weight: bold; margin-top: 10px; color: red; }
+        #failedMessage { display: none; color: red; font-size: 24px; font-weight: bold; margin-top: 20px; }
+        #data { font-size: 20px; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지v8</h1>
-    <button id="startSensor">센서 활성화</button>
-    <p id="data">데이터 없음</p>
-    <p id="timer">00:00.00</p>
+    <h1>자이로스코프 감지</h1>
+
+    <!-- 닉네임 입력 필드 -->
+    <div id="nicknameContainer">
+        <p>닉네임을 입력하세요:</p>
+        <input type="text" id="nicknameInput" placeholder="닉네임 입력">
+        <button id="nicknameSubmit">확인</button>
+    </div>
+
+    <!-- 센서 활성화 버튼 -->
+    <div id="sensorContainer" style="display: none;">
+        <button id="startSensor">센서 활성화</button>
+        <p id="data">데이터 없음</p>
+        <p id="timer">00:00.00</p>
+    </div>
+
+    <!-- 실패 메시지 -->
+    <p id="failedMessage">🚨 Failed! 🚨</p>
+    <button id="retryButton" style="display: none;">다시 시작</button>
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
@@ -34,35 +53,47 @@
         const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let initialBeta = null;
-        let initialGamma = null;
+        let nickname = "";
         let startTime;
         let timerInterval;
         let isTimerStopped = false;
         let isScoreSaved = false;
+        let initialBeta = null;
+        let initialGamma = null;
 
-        // ✅ "처음으로" 버튼 클릭 후 다시 로드될 때 초기화
-        window.onload = function () {
+        // ✅ 닉네임 입력 후 센서 활성화 버튼 표시
+        document.getElementById("nicknameSubmit").addEventListener("click", function() {
+            nickname = document.getElementById("nicknameInput").value.trim();
+            if (nickname === "") {
+                alert("닉네임을 입력해주세요!");
+                return;
+            }
+            localStorage.setItem("nickname", nickname);
+            document.getElementById("nicknameContainer").style.display = "none";
+            document.getElementById("sensorContainer").style.display = "block";
+        });
+
+        // ✅ "다시 시작" 버튼 클릭 시 초기화
+        document.getElementById("retryButton").addEventListener("click", function() {
+            location.reload();
+        });
+
+        function resetState() {
             isTimerStopped = false;
             isScoreSaved = false;
-        };
+            initialBeta = null;
+            initialGamma = null;
+            nickname = localStorage.getItem("nickname") || "";
+            document.getElementById("failedMessage").style.display = "none";
+            document.getElementById("retryButton").style.display = "none";
+            document.getElementById("sensorContainer").style.display = "block";
+        }
 
+        window.onload = resetState;
         document.getElementById("startSensor").addEventListener("click", function() {
-            if (typeof DeviceOrientationEvent.requestPermission === "function") {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === "granted") {
-                            startTimer();
-                            startGyroscope();
-                        } else {
-                            alert("자이로스코프 접근이 거부되었습니다.");
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                startTimer();
-                startGyroscope();
-            }
+            resetState();
+            startTimer();
+            startGyroscope();
         });
 
         function startTimer() {
@@ -91,11 +122,25 @@
             localStorage.setItem("stoppedTime", finalTime);
 
             if (!isScoreSaved) {
-                saveScore(finalTime);
+                saveScore(nickname, finalTime);
                 isScoreSaved = true;
             }
 
-            window.location.href = "failed.html";
+            // ✅ "Failed" 메시지를 현재 페이지에 표시
+            document.getElementById("sensorContainer").style.display = "none"; // 센서 관련 UI 숨김
+            document.getElementById("failedMessage").style.display = "block";
+            document.getElementById("retryButton").style.display = "block";
+        }
+
+        function saveScore(nickname, time) {
+            push(ref(db, "scores"), { nickname: nickname, time: time })
+                .then(() => {
+                    console.log(`✅ Firebase 저장 성공: ${nickname} - ${time}`);
+                })
+                .catch(error => {
+                    console.error("❌ Firebase 저장 실패:", error);
+                    isScoreSaved = false;
+                });
         }
 
         function startGyroscope() {
@@ -116,14 +161,6 @@
                 if (betaChange > 1 || gammaChange > 1) {
                     stopTimer();
                 }
-            });
-        }
-
-        function saveScore(time) {
-            push(ref(db, "scores"), { time: time }).then(() => {
-                console.log("✅ Firebase 저장 성공:", time);
-            }).catch(error => {
-                console.error("❌ Firebase 저장 실패:", error);
             });
         }
     </script>
