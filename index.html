@@ -11,14 +11,13 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지2</h1>
+    <h1>자이로스코프 감지v3</h1>
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
     <p id="timer">00:00.00</p>
 
     <!-- Firebase SDK 모듈 방식 -->
     <script type="module">
-        // Firebase 모듈 가져오기
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
         import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
@@ -42,6 +41,7 @@
         let initialGamma = null;
         let startTime;
         let timerInterval;
+        let isTimerStopped = false; // ✅ 중복 실행 방지 플래그
 
         document.getElementById("startSensor").addEventListener("click", function() {
             if (typeof DeviceOrientationEvent.requestPermission === "function") {
@@ -74,6 +74,9 @@
         }
 
         function stopTimer() {
+            if (isTimerStopped) return; // ✅ 이미 실행된 경우 중복 실행 방지
+            isTimerStopped = true; // ✅ 한 번 실행 후 중복 실행 방지
+
             clearInterval(timerInterval);
             let elapsedTime = (performance.now() - startTime) / 1000;
             let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
@@ -83,7 +86,7 @@
             let finalTime = `${minutes}:${seconds}.${milliseconds}`;
             localStorage.setItem("stoppedTime", finalTime);
 
-            // Firebase에 점수 저장
+            // ✅ Firebase에 데이터 저장
             saveScore(finalTime);
 
             // Failed 페이지로 이동
@@ -92,10 +95,10 @@
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
+                if (isTimerStopped) return; // ✅ 중복 실행 방지
+
                 const beta = event.beta ? event.beta.toFixed(2) : 0;
                 const gamma = event.gamma ? event.gamma.toFixed(2) : 0;
-
-                document.getElementById("data").innerText = `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
 
                 if (initialBeta === null) initialBeta = beta;
                 if (initialGamma === null) initialGamma = gamma;
@@ -104,7 +107,7 @@
                 const gammaChange = Math.abs(gamma - initialGamma);
 
                 if (betaChange > 1 || gammaChange > 1) {
-                    stopTimer();
+                    stopTimer(); // 🚀 이제 한 번만 실행됨!
                 }
             });
         }
