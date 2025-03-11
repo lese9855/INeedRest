@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지v6</h1>
+    <h1>자이로스코프 감지</h1>
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
     <p id="timer">00:00.00</p>
@@ -31,7 +31,6 @@
             measurementId: "G-XBM8PZDMW2"
         };
 
-        // ✅ Firebase 중복 초기화 방지
         const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -40,12 +39,12 @@
         let startTime;
         let timerInterval;
         let isTimerStopped = false;
-        let isScoreSaved = false; // ✅ 중복 저장 방지 변수 추가
+        let isScoreSaved = false;
 
         // ✅ "처음으로" 버튼 클릭 후 다시 로드될 때 초기화
         window.onload = function () {
             isTimerStopped = false;
-            isScoreSaved = false; // ✅ 페이지 새로 로드 시 초기화
+            isScoreSaved = false;
         };
 
         document.getElementById("startSensor").addEventListener("click", function() {
@@ -79,8 +78,8 @@
         }
 
         function stopTimer() {
-            if (isTimerStopped) return; // ✅ 중복 실행 방지
-            isTimerStopped = true; // ✅ 실행 상태 설정
+            if (isTimerStopped) return;
+            isTimerStopped = true;
 
             clearInterval(timerInterval);
             let elapsedTime = (performance.now() - startTime) / 1000;
@@ -91,21 +90,22 @@
             let finalTime = `${minutes}:${seconds}.${milliseconds}`;
             localStorage.setItem("stoppedTime", finalTime);
 
-            // ✅ Firebase에 한 번만 저장
             if (!isScoreSaved) {
-                isScoreSaved = true; // ✅ 중복 저장 방지
                 saveScore(finalTime);
+                isScoreSaved = true;
             }
 
-            window.location.href = "failed.html"; // ✅ 페이지 이동
+            window.location.href = "failed.html";
         }
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
-                if (isTimerStopped) return; // ✅ 중복 실행 방지
+                if (isTimerStopped) return;
 
                 const beta = event.beta ? event.beta.toFixed(2) : 0;
                 const gamma = event.gamma ? event.gamma.toFixed(2) : 0;
+
+                document.getElementById("data").innerText = `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
 
                 if (initialBeta === null) initialBeta = beta;
                 if (initialGamma === null) initialGamma = gamma;
