@@ -20,25 +20,43 @@
     <button onclick="location.href='index.html'">처음으로</button>
 
     <script>
+        // 🔹 Firebase 설정 정보
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // 🔹 Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         document.getElementById("stoppedTime").innerText = localStorage.getItem("stoppedTime") || "00:00.00";
 
         function loadLeaderboard() {
-            const db = firebase.database();
-            db.ref("scores").orderByChild("time").limitToLast(10).on("value", snapshot => {
-                let scores = [];
-                snapshot.forEach(child => {
-                    scores.push(child.val().time);
-                });
-                scores.reverse();
+            db.ref("scores")
+              .orderByChild("time")
+              .limitToLast(10)
+              .on("value", snapshot => {
+                  let scores = [];
+                  snapshot.forEach(child => {
+                      scores.push(child.val().time);
+                  });
 
-                let list = document.getElementById("leaderboard");
-                list.innerHTML = "";
-                scores.forEach(score => {
-                    let li = document.createElement("li");
-                    li.innerText = score;
-                    list.appendChild(li);
-                });
-            });
+                  scores.reverse();
+
+                  let list = document.getElementById("leaderboard");
+                  list.innerHTML = "";
+                  scores.forEach(score => {
+                      let li = document.createElement("li");
+                      li.innerText = score;
+                      list.appendChild(li);
+                  });
+              });
         }
 
         loadLeaderboard();
