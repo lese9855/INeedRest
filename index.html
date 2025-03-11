@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자이로스코프 센서 테스트</title>
+    <title>자이로스코프 테스트</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,11 +22,9 @@
     <p id="data">데이터 없음</p>
 
     <script>
+        let lastBeta = null;
         let lastGamma = null;
-        let lastAlpha = null;
-        const threshold = 1; // 변화 감지 임계값
 
-        // 센서 활성화 요청 (iOS 13+에서 필요)
         document.getElementById("startSensor").addEventListener("click", function() {
             if (typeof DeviceOrientationEvent.requestPermission === "function") {
                 DeviceOrientationEvent.requestPermission()
@@ -39,29 +37,27 @@
                     })
                     .catch(console.error);
             } else {
-                startGyroscope(); // 안드로이드는 요청 없이 실행 가능
+                startGyroscope();
             }
         });
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
-                const alpha = event.alpha ? event.alpha.toFixed(2) : 0;  // z축 (방위각)
                 const beta = event.beta ? event.beta.toFixed(2) : 0;    // x축 (기울기)
                 const gamma = event.gamma ? event.gamma.toFixed(2) : 0; // y축 (좌우 회전)
 
                 document.getElementById("data").innerText = 
-                    `Alpha (z축): ${alpha}°\nBeta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
+                    `Beta (x축): ${beta}°\nGamma (y축): ${gamma}°`;
 
-                // 자이로스코프 변화 감지
-                if (lastGamma !== null && lastAlpha !== null) {
-                    if (Math.abs(lastGamma - gamma) > threshold || Math.abs(lastAlpha - alpha) > threshold) {
-                        window.location.href = "failed.html"; // "Failed" 페이지로 이동
+                // 1도 이상 변화 감지
+                if (lastBeta !== null && lastGamma !== null) {
+                    if (Math.abs(lastBeta - beta) > 1 || Math.abs(lastGamma - gamma) > 1) {
+                        window.location.href = "failed.html"; // 실패 페이지로 이동
                     }
                 }
 
-                // 이전 값 저장
+                lastBeta = beta;
                 lastGamma = gamma;
-                lastAlpha = alpha;
             });
         }
     </script>
