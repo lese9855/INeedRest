@@ -16,47 +16,47 @@
     <h2>🏆 랭킹 (Top 10) 🏆</h2>
     <ol id="leaderboard"></ol>
     <button onclick="location.href='index.html'">처음으로</button>
-    
+
+    <!-- Firebase SDK 모듈 방식 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+        import { getDatabase, ref, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
         const firebaseConfig = {
-          apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
-          authDomain: "ineedrest-1c987.firebaseapp.com",
-          databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
-          projectId: "ineedrest-1c987",
-          storageBucket: "ineedrest-1c987.firebasestorage.app",
-          messagingSenderId: "1076501106165",
-          appId: "1:1076501106165:web:970dfee4b57b95c41f64bc",
-          measurementId: "G-XBM8PZDMW2"
+            apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
+            authDomain: "ineedrest-1c987.firebaseapp.com",
+            databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
+            projectId: "ineedrest-1c987",
+            storageBucket: "ineedrest-1c987.firebasestorage.app",
+            messagingSenderId: "1076501106165",
+            appId: "1:1076501106165:web:970dfee4b57b95c41f64bc",
+            measurementId: "G-XBM8PZDMW2"
         };
 
-        // 🔹 Firebase 초기화
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         document.getElementById("stoppedTime").innerText = localStorage.getItem("stoppedTime") || "00:00.00";
 
         function loadLeaderboard() {
-            db.ref("scores")
-              .orderByChild("time")
-              .limitToLast(10)
-              .on("value", snapshot => {
-                  let scores = [];
-                  snapshot.forEach(child => {
-                      scores.push(child.val().time);
-                  });
+            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
 
-                  scores.reverse();
+            get(scoresRef).then(snapshot => {
+                let scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val().time);
+                });
 
-                  let list = document.getElementById("leaderboard");
-                  list.innerHTML = "";
-                  scores.forEach(score => {
-                      let li = document.createElement("li");
-                      li.innerText = score;
-                      list.appendChild(li);
-                  });
-              });
+                scores.reverse();
+
+                let list = document.getElementById("leaderboard");
+                list.innerHTML = "";
+                scores.forEach(score => {
+                    let li = document.createElement("li");
+                    li.innerText = score;
+                    list.appendChild(li);
+                });
+            });
         }
 
         loadLeaderboard();
