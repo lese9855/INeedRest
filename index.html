@@ -17,19 +17,19 @@
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
     <p id="timer">00:00.00</p>
-
-    <script>
-        // 🔹 Firebase 설정 정보
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
         const firebaseConfig = {
-            apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
-            authDomain: "ineedrest-1c987.firebaseapp.com",
-            databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
-            projectId: "ineedrest-1c987",
-            storageBucket: "ineedrest-1c987.firebasestorage.app",
-            messagingSenderId: "1076501106165",
-            appId: "1:1076501106165:web:970dfee4b57b95c41f64bc"
+          apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
+          authDomain: "ineedrest-1c987.firebaseapp.com",
+          databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
+          projectId: "ineedrest-1c987",
+          storageBucket: "ineedrest-1c987.firebasestorage.app",
+          messagingSenderId: "1076501106165",
+          appId: "1:1076501106165:web:970dfee4b57b95c41f64bc",
+          measurementId: "G-XBM8PZDMW2"
         };
-
         // 🔹 Firebase 초기화
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
