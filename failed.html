@@ -4,28 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>실패 - 다시 시도</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        button { padding: 10px 20px; font-size: 18px; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
     <h1>⚠️ Failed ⚠️</h1>
     <p>기기가 움직였습니다. 다시 시도해주세요.</p>
     <p><strong>센서 활성화 후 지속된 시간:</strong> <span id="stoppedTime">00:00.00</span></p>
+    <h2>🏆 랭킹 (Top 10) 🏆</h2>
+    <ol id="leaderboard"></ol>
     <button onclick="location.href='index.html'">처음으로</button>
 
     <script>
         document.getElementById("stoppedTime").innerText = localStorage.getItem("stoppedTime") || "00:00.00";
+
+        function loadLeaderboard() {
+            const db = firebase.database();
+            db.ref("scores").orderByChild("time").limitToLast(10).on("value", snapshot => {
+                let scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val().time);
+                });
+                scores.reverse();
+
+                let list = document.getElementById("leaderboard");
+                list.innerHTML = "";
+                scores.forEach(score => {
+                    let li = document.createElement("li");
+                    li.innerText = score;
+                    list.appendChild(li);
+                });
+            });
+        }
+
+        loadLeaderboard();
     </script>
 </body>
 </html>
