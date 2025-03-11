@@ -3,35 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Failed</title>
+    <title>실패 - 다시 시도</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 50px;
-            background-color: #ffdddd;
-        }
-        h1 {
-            color: red;
+            padding: 20px;
         }
         button {
             padding: 10px 20px;
             font-size: 18px;
-            margin-top: 20px;
             cursor: pointer;
-            background-color: red;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: darkred;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Failed!</h1>
+    <h1>⚠️ Failed ⚠️</h1>
     <p>기기가 움직였습니다. 다시 시도해주세요.</p>
-    <button onclick="location.href='index.html'">처음으로 돌아가기</button>
+    <p><strong>센서 활성화 후 지속된 시간:</strong> <span id="stoppedTime">00:00</span></p>
+    <button onclick="location.href='index.html'">처음으로</button>
+
+    <script>
+        // 로컬 스토리지에서 타이머 종료 시간 가져오기
+        document.getElementById("stoppedTime").innerText = localStorage.getItem("stoppedTime") || "00:00";
+    </script>
 </body>
 </html>
