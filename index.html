@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지v5</h1>
+    <h1>자이로스코프 감지v6</h1>
     <button id="startSensor">센서 활성화</button>
     <p id="data">데이터 없음</p>
     <p id="timer">00:00.00</p>
@@ -40,10 +40,12 @@
         let startTime;
         let timerInterval;
         let isTimerStopped = false;
+        let isScoreSaved = false; // ✅ 중복 저장 방지 변수 추가
 
         // ✅ "처음으로" 버튼 클릭 후 다시 로드될 때 초기화
         window.onload = function () {
             isTimerStopped = false;
+            isScoreSaved = false; // ✅ 페이지 새로 로드 시 초기화
         };
 
         document.getElementById("startSensor").addEventListener("click", function() {
@@ -89,10 +91,13 @@
             let finalTime = `${minutes}:${seconds}.${milliseconds}`;
             localStorage.setItem("stoppedTime", finalTime);
 
-            // ✅ 중복 실행 방지 강제 초기화
-            isTimerStopped = false;
-            saveScore(finalTime);
-            window.location.href = "failed.html";
+            // ✅ Firebase에 한 번만 저장
+            if (!isScoreSaved) {
+                isScoreSaved = true; // ✅ 중복 저장 방지
+                saveScore(finalTime);
+            }
+
+            window.location.href = "failed.html"; // ✅ 페이지 이동
         }
 
         function startGyroscope() {
