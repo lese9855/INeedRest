@@ -39,7 +39,17 @@
         }
         #retryButton:hover { background-color: #e63e3e; }
 
-        #timer, #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
+        /* 타이머 스타일 */
+        #timer {
+            font-size: 48px;  /* 글씨 크기 크게 */
+            font-weight: bold;
+            color: #000;  /* 검정색 */
+            text-align: center;
+            display: none;
+            margin-top: 100px;  /* 상단 여백 */
+        }
+
+        #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
         #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 20px; color: blue; }
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
@@ -58,6 +68,9 @@
 
     <!-- Need More Rest 버튼 -->
     <button id="retryButton" style="display: none;">Need More Rest</button>
+
+    <!-- 타이머 -->
+    <p id="timer">00:00.00</p>
 
     <!-- 최종 시간 -->
     <p id="finalTime"></p>
@@ -78,7 +91,6 @@
 
     <!-- 센서 데이터 -->
     <p id="data">Beta: 0° / Gamma: 0°</p>
-    <p id="timer">00:00.00</p>
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
@@ -139,11 +151,20 @@
             }
         }
 
+        function formatTime(milliseconds) {
+            let totalSeconds = Math.floor(milliseconds / 1000);
+            let minutes = Math.floor(totalSeconds / 60);
+            let seconds = totalSeconds % 60;
+            let millisecondsPart = Math.floor((milliseconds % 1000) / 10); // 2자리 소수점
+
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(millisecondsPart).padStart(2, '0')}`;
+        }
+
         function startTimer() {
             startTime = performance.now();
             timerInterval = setInterval(() => {
-                let elapsedTime = (performance.now() - startTime) / 1000;
-                document.getElementById("timer").innerText = elapsedTime.toFixed(2) + "s";
+                let elapsedTime = performance.now() - startTime;
+                document.getElementById("timer").innerText = formatTime(elapsedTime);
             }, 10);
         }
 
@@ -170,54 +191,22 @@
             isTimerStopped = true;
 
             clearInterval(timerInterval);
-            let elapsedTime = (performance.now() - startTime) / 1000;
-            let finalTime = parseFloat(elapsedTime.toFixed(2));
-
+            let elapsedTime = performance.now() - startTime;
             document.getElementById("finalTime").style.display = "block";
-            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${finalTime}s`;
+            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(elapsedTime)}`;
             document.getElementById("rankingTable").style.display = "table";
 
             document.getElementById("data").style.display = "none";
             document.getElementById("timer").style.display = "none";
 
-            // "Need More Rest" 버튼 표시
             document.getElementById("retryButton").style.display = "block"; 
 
-            await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
+            await push(ref(db, "scores"), { nickname: nickname, time: elapsedTime });
             setTimeout(loadLeaderboard, 1000);
         }
 
-        async function loadLeaderboard() {
-            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
-
-            try {
-                const snapshot = await get(scoresRef);
-
-                if (!snapshot.exists()) {
-                    document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
-                    return;
-                }
-
-                let scores = [];
-                snapshot.forEach(child => {
-                    scores.push(child.val());
-                });
-
-                scores.sort((a, b) => b.time - a.time);
-
-                let list = document.getElementById("rankingBody");
-                list.innerHTML = "";
-                scores.forEach((score, index) => {
-                    list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${score.time.toFixed(2)}s</td></tr>`;
-                });
-
-            } catch (error) {
-                console.error("❌ Firebase 데이터 로드 실패:", error);
-            }
-        }
-
         document.getElementById("retryButton").addEventListener("click", function() {
-            location.reload(); // 게임 초기화
+            location.reload();
         });
     </script>
 </body>
