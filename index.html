@@ -41,7 +41,7 @@
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+        import { getDatabase, ref, push, query, orderByChild, limitToFirst, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
@@ -83,21 +83,50 @@
             location.reload();
         });
 
-        function resetState() {
-            isTimerStopped = false;
-            isScoreSaved = false;
-            initialBeta = null;
-            initialGamma = null;
-            nickname = localStorage.getItem("nickname") || "";
-            document.getElementById("failedMessage").style.display = "none";
-            document.getElementById("retryButton").style.display = "none";
-            document.getElementById("leaderboard").style.display = "none";
-            document.getElementById("rankingList").innerHTML = "";
-            document.getElementById("data").innerText = "데이터 없음";
-            document.getElementById("timer").innerText = "00:00.00";
+        async function stopTimer() {
+            if (isTimerStopped) return;
+            isTimerStopped = true;
+
+            clearInterval(timerInterval);
+            let elapsedTime = (performance.now() - startTime) / 1000;
+            let finalTime = parseFloat(elapsedTime.toFixed(2));
+
+            localStorage.setItem("stoppedTime", finalTime);
+
+            if (!isScoreSaved) {
+                await saveScore(nickname, finalTime);
+                isScoreSaved = true;
+            }
+
+            await loadLeaderboard(); // ✅ 랭킹 데이터 로드 후 Failed 표시
+            document.getElementById("failedMessage").style.display = "block";
+            document.getElementById("retryButton").style.display = "block";
+            document.getElementById("leaderboard").style.display = "block";
         }
 
-        window.onload = resetState;
+        async function saveScore(nickname, time) {
+            await push(ref(db, "scores"), { nickname: nickname, time: time });
+        }
+
+        async function loadLeaderboard() {
+            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToFirst(10));
+            const snapshot = await get(scoresRef);
+
+            let scores = [];
+            snapshot.forEach(child => {
+                scores.push(child.val());
+            });
+
+            scores.sort((a, b) => b.time - a.time); // ✅ 시간 긴 순 정렬
+
+            let list = document.getElementById("rankingList");
+            list.innerHTML = "";
+            scores.forEach((score, index) => {
+                let li = document.createElement("li");
+                li.innerText = `${index + 1}위: ${score.nickname} - ${score.time}s`;
+                list.appendChild(li);
+            });
+        }
 
         async function requestSensorPermission() {
             if (typeof DeviceOrientationEvent.requestPermission === "function") {
@@ -123,66 +152,8 @@
             startTime = performance.now();
             timerInterval = setInterval(() => {
                 let elapsedTime = (performance.now() - startTime) / 1000;
-                let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
-                let seconds = String(Math.floor(elapsedTime % 60)).padStart(2, '0');
-                let milliseconds = String((elapsedTime % 1).toFixed(2).substring(2)).padStart(2, '0');
-
-                document.getElementById("timer").innerText = `${minutes}:${seconds}.${milliseconds}`;
+                document.getElementById("timer").innerText = elapsedTime.toFixed(2) + "s";
             }, 10);
-        }
-
-        function stopTimer() {
-            if (isTimerStopped) return;
-            isTimerStopped = true;
-
-            clearInterval(timerInterval);
-            let elapsedTime = (performance.now() - startTime) / 1000;
-            let finalTime = elapsedTime.toFixed(2);
-
-            localStorage.setItem("stoppedTime", finalTime);
-
-            if (!isScoreSaved) {
-                saveScore(nickname, finalTime);
-                isScoreSaved = true;
-            }
-
-            document.getElementById("failedMessage").style.display = "block";
-            document.getElementById("retryButton").style.display = "block";
-            loadLeaderboard();
-        }
-
-        function saveScore(nickname, time) {
-            push(ref(db, "scores"), { nickname: nickname, time: parseFloat(time) })
-                .then(() => {
-                    console.log(`✅ Firebase 저장 성공: ${nickname} - ${time}`);
-                })
-                .catch(error => {
-                    console.error("❌ Firebase 저장 실패:", error);
-                    isScoreSaved = false;
-                });
-        }
-
-        function loadLeaderboard() {
-            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
-
-            get(scoresRef).then(snapshot => {
-                let scores = [];
-                snapshot.forEach(child => {
-                    scores.push(child.val());
-                });
-
-                scores.sort((a, b) => b.time - a.time); // ✅ 시간 긴 순 정렬
-
-                let list = document.getElementById("rankingList");
-                list.innerHTML = "";
-                scores.forEach((score, index) => {
-                    let li = document.createElement("li");
-                    li.innerText = `${index + 1}위: ${score.nickname} - ${score.time}s`;
-                    list.appendChild(li);
-                });
-
-                document.getElementById("leaderboard").style.display = "block";
-            });
         }
 
         function startGyroscope() {
