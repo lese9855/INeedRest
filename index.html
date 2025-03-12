@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자이로스코프 센서 테스트</title>
+    <title>자이로스코프 센서 감지 테스트</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         #nicknameContainer { margin-top: 20px; }
@@ -12,11 +12,11 @@
         #timer { font-size: 24px; font-weight: bold; margin-top: 10px; color: red; }
         #failedMessage { display: none; color: red; font-size: 24px; font-weight: bold; margin-top: 20px; }
         #data { font-size: 20px; font-weight: bold; margin-top: 10px; }
-        #leaderboard { display: none; margin-top: 20px; text-align: left; max-width: 300px; margin-left: auto; margin-right: auto; }
+        #leaderboard { margin-top: 20px; text-align: left; max-width: 300px; margin-left: auto; margin-right: auto; }
     </style>
 </head>
 <body>
-    <h1>자이로스코프 센서 테스트v13</h1>
+    <h1>자이로스코프 센서 감지 테스트v14</h1>
 
     <!-- 닉네임 입력 필드 -->
     <div id="nicknameContainer">
@@ -32,7 +32,7 @@
     <!-- 랭킹 표시 -->
     <div id="leaderboard">
         <h2>🏆 랭킹 (Top 10) 🏆</h2>
-        <ol id="rankingList"></ol>
+        <ol id="rankingList">로딩 중...</ol>
     </div>
 
     <!-- 센서 데이터 -->
@@ -102,7 +102,7 @@
             await push(ref(db, "scores"), { nickname: nickname, time: parseFloat(time) });
         }
 
-        async function loadLeaderboard(retryCount = 0) {
+        async function loadLeaderboard() {
             console.log("🔄 랭킹 데이터 불러오는 중...");
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
 
@@ -111,10 +111,7 @@
 
                 if (!snapshot.exists()) {
                     console.warn("⚠️ 랭킹 데이터 없음");
-                    if (retryCount < 3) {
-                        console.log(`⏳ ${retryCount + 1}번째 재시도 중...`);
-                        setTimeout(() => loadLeaderboard(retryCount + 1), 500);
-                    }
+                    document.getElementById("rankingList").innerHTML = "<li>등록된 기록 없음</li>";
                     return;
                 }
 
@@ -133,7 +130,7 @@
                     list.appendChild(li);
                 });
 
-                document.getElementById("leaderboard").style.display = "block";
+                console.log("✅ 랭킹 데이터 로드 완료!");
             } catch (error) {
                 console.error("❌ Firebase 데이터 로드 실패:", error);
             }
@@ -183,6 +180,10 @@
                 }
             });
         }
+
+        window.onload = async function () {
+            await loadLeaderboard();
+        };
     </script>
 </body>
 </html>
