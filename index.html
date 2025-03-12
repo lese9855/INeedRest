@@ -13,6 +13,7 @@
         #failedMessage { display: none; color: red; font-size: 24px; font-weight: bold; margin-top: 20px; }
         #data { font-size: 20px; font-weight: bold; margin-top: 10px; }
         #leaderboard { display: none; margin-top: 20px; text-align: left; max-width: 300px; margin-left: auto; margin-right: auto; }
+        ol { list-style-type: none; padding-left: 0; } /* ✅ 리스트 스타일 제거 */
     </style>
 </head>
 <body>
@@ -131,7 +132,7 @@
                 list.innerHTML = "";
                 scores.forEach((score, index) => {
                     let li = document.createElement("li");
-                    li.innerText = `${index + 1}위: ${score.nickname} - ${formatTime(score.time)}`;
+                    li.innerText = `🏅 ${index + 1}위: ${score.nickname} - ${formatTime(score.time)}`;
                     list.appendChild(li);
                 });
 
