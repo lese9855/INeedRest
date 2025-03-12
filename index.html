@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 센서 감지 테스트v15</h1>
+    <h1>자이로스코프 센서 감지 테스트</h1>
 
     <!-- 닉네임 입력 필드 -->
     <div id="nicknameContainer">
@@ -64,6 +64,10 @@
         let isScoreSaved = false;
         let initialBeta = null;
         let initialGamma = null;
+        let retryCount = 0;
+        let maxRetries = 5;
+        let intervalId = null;
+        let isDataLoaded = false;
 
         document.getElementById("nicknameSubmit").addEventListener("click", async function() {
             nickname = document.getElementById("nicknameInput").value.trim();
@@ -102,8 +106,8 @@
             await push(ref(db, "scores"), { nickname: nickname, time: parseFloat(time) });
         }
 
-        async function loadLeaderboard(retryCount = 0) {
-            console.log(`🔄 랭킹 데이터 불러오는 중... (시도 ${retryCount + 1}/5)`);
+        async function loadLeaderboard() {
+            console.log(`🔄 랭킹 데이터 불러오는 중... (시도 ${retryCount + 1}/${maxRetries})`);
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
 
             try {
@@ -111,11 +115,14 @@
 
                 if (!snapshot.exists()) {
                     console.warn("⚠️ 랭킹 데이터 없음");
-                    if (retryCount < 5) {
-                        console.log(`⏳ ${retryCount + 1}번째 재시도 중...`);
-                        setTimeout(() => loadLeaderboard(retryCount + 1), 3000);
+                    document.getElementById("rankingList").innerHTML = "<li>등록된 기록 없음</li>";
+
+                    if (retryCount < maxRetries) {
+                        retryCount++;
+                        console.log(`⏳ ${retryCount}번째 재시도 중...`);
+                        setTimeout(loadLeaderboard, 3000);
                     } else {
-                        document.getElementById("rankingList").innerHTML = "<li>등록된 기록 없음</li>";
+                        console.error("❌ 최대 재시도 횟수 초과");
                     }
                     return;
                 }
@@ -136,8 +143,22 @@
                 });
 
                 console.log("✅ 랭킹 데이터 로드 완료!");
+                isDataLoaded = true;
+
+                if (intervalId !== null) {
+                    clearInterval(intervalId);
+                    console.log("⏹️ 추가 데이터 로드 중단");
+                }
+
             } catch (error) {
                 console.error("❌ Firebase 데이터 로드 실패:", error);
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`⏳ ${retryCount}번째 재시도 중...`);
+                    setTimeout(loadLeaderboard, 3000);
+                } else {
+                    console.error("❌ 최대 재시도 횟수 초과");
+                }
             }
         }
 
@@ -158,32 +179,6 @@
                 startTimer();
                 startGyroscope();
             }
-        }
-
-        function startTimer() {
-            startTime = performance.now();
-            timerInterval = setInterval(() => {
-                let elapsedTime = (performance.now() - startTime) / 1000;
-                document.getElementById("timer").innerText = elapsedTime.toFixed(2) + "s";
-            }, 10);
-        }
-
-        function startGyroscope() {
-            window.addEventListener("deviceorientation", function(event) {
-                if (isTimerStopped) return;
-
-                const beta = event.beta;
-                const gamma = event.gamma;
-
-                document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}°\nGamma: ${gamma.toFixed(2)}°`;
-
-                if (initialBeta === null) initialBeta = beta;
-                if (initialGamma === null) initialGamma = gamma;
-
-                if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
-                    stopTimer();
-                }
-            });
         }
 
         window.onload = async function () {
