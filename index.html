@@ -105,6 +105,10 @@
                 alert("닉네임을 입력해주세요!");
                 return;
             }
+
+            const confirmed = confirm("지금부터 핸드폰을 내려놔주세요");
+            if (!confirmed) return;
+
             localStorage.setItem("nickname", nickname);
             document.getElementById("nicknameContainer").style.display = "none";
 
