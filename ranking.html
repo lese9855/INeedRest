@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자이로스코프 랭킹</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #rankingTable { width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
+        #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
+        #rankingTable th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h1>🏆 자이로스코프 랭킹 🏆</h1>
+    <p>상위 10위 플레이어를 표시합니다.</p>
+
+    <table id="rankingTable">
+        <thead>
+            <tr>
+                <th>순위</th>
+                <th>닉네임</th>
+                <th>타이머 시간 (초)</th>
+            </tr>
+        </thead>
+        <tbody id="rankingBody">
+            <tr><td colspan="3">🔄 데이터 로딩 중...</td></tr>
+        </tbody>
+    </table>
+
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getDatabase, ref, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+        // ✅ Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
+            authDomain: "ineedrest-1c987.firebaseapp.com",
+            databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
+            projectId: "ineedrest-1c987",
+            storageBucket: "ineedrest-1c987.firebasestorage.app",
+            messagingSenderId: "1076501106165",
+            appId: "1:1076501106165:web:970dfee4b57b95c41f64bc",
+            measurementId: "G-XBM8PZDMW2"
+        };
+
+        const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        async function loadRanking() {
+            console.log("🔄 랭킹 데이터 불러오는 중...");
+            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
+
+            try {
+                const snapshot = await get(scoresRef);
+
+                if (!snapshot.exists()) {
+                    console.warn("⚠️ 랭킹 데이터 없음");
+                    document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
+                    return;
+                }
+
+                let scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val());
+                });
+
+                // ✅ 시간 긴 순 정렬
+                scores.sort((a, b) => b.time - a.time);
+
+                // ✅ 랭킹 리스트 업데이트
+                let rankingHTML = "";
+                scores.forEach((score, index) => {
+                    rankingHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${score.nickname}</td>
+                            <td>${score.time.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById("rankingBody").innerHTML = rankingHTML;
+                console.log("✅ 랭킹 데이터 로드 완료!");
+            } catch (error) {
+                console.error("❌ Firebase 데이터 로드 실패:", error);
+                document.getElementById("rankingBody").innerHTML = `<tr><td colspan='3'>❌ 오류 발생: ${error.message}</td></tr>`;
+            }
+        }
+
+        // ✅ 데이터 첫 로딩
+        loadRanking();
+
+        // ✅ 5초마다 데이터 자동 새로고침
+        setInterval(loadRanking, 5000);
+    </script>
+</body>
+</html>
