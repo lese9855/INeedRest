@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자이로스코프 감지</title>
+    <title>자이로스코프 센서 테스트</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         #nicknameContainer { margin-top: 20px; }
@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지v11</h1>
+    <h1>자이로스코프 센서 테스트v12</h1>
 
     <!-- 닉네임 입력 필드 -->
     <div id="nicknameContainer">
@@ -96,21 +96,19 @@
             document.getElementById("failedMessage").style.display = "block";
             document.getElementById("retryButton").style.display = "block";
 
-            if (!isScoreSaved) {
-                await saveScore(nickname, finalTime);
-                isScoreSaved = true;
-            }
-
+            await saveScore(nickname, finalTime);
             await loadLeaderboard();
         }
 
         async function saveScore(nickname, time) {
-            await push(ref(db, "scores"), { nickname: nickname, time: time });
+            await push(ref(db, "scores"), { nickname: nickname, time: parseFloat(time) });
         }
 
         async function loadLeaderboard() {
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
             const snapshot = await get(scoresRef);
+
+            if (!snapshot.exists()) return;
 
             let scores = [];
             snapshot.forEach(child => {
@@ -123,7 +121,7 @@
             list.innerHTML = "";
             scores.forEach((score, index) => {
                 let li = document.createElement("li");
-                li.innerText = `${index + 1}위: ${score.nickname} - ${score.time}s`;
+                li.innerText = `${index + 1}위: ${score.nickname} - ${score.time.toFixed(2)}s`;
                 list.appendChild(li);
             });
 
@@ -141,7 +139,6 @@
                         alert("센서 접근이 거부되었습니다.");
                     }
                 } catch (error) {
-                    console.error("센서 권한 요청 실패:", error);
                     alert("센서 접근을 허용해주세요.");
                 }
             } else {
