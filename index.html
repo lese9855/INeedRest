@@ -22,7 +22,21 @@
             border-radius: 8px;
         }
         #nicknameSubmit:hover { background-color: #45a049; }
-        #retryButton { display: none; padding: 12px 25px; font-size: 18px; cursor: pointer; margin-top: 20px; background-color: #ff4747; color: white; border: none; border-radius: 8px; }
+        #retryButton { 
+            display: none; 
+            padding: 15px 30px; 
+            font-size: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            background-color: #ff4747; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            position: absolute; 
+            left: 50%; 
+            top: 50%; 
+            transform: translate(-50%, -50%);
+        }
         #retryButton:hover { background-color: #e63e3e; }
         #timer, #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
         #failedMessage { display: none; color: red; font-size: 28px; font-weight: bold; margin-top: 20px; }
@@ -45,7 +59,7 @@
     <!-- 실패 메시지 -->
     <p id="failedMessage">I Need More Rest!</p>
     <p id="finalTime"></p>
-    <button id="retryButton">다시 시작</button>
+    <button id="retryButton">Retry</button>
 
     <!-- 랭킹 표시 (표) -->
     <table id="rankingTable">
@@ -166,7 +180,7 @@
             document.getElementById("data").style.display = "none";
             document.getElementById("timer").style.display = "none";
 
-            // 다시 시작 버튼 표시
+            // Retry 버튼 표시 (화면 중앙)
             document.getElementById("retryButton").style.display = "block"; 
 
             await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
