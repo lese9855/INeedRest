@@ -22,10 +22,25 @@
             border-radius: 8px;
         }
         #nicknameSubmit:hover { background-color: #45a049; }
-        #retryButton { display: none; padding: 15px 30px; font-size: 20px; cursor: pointer; margin-top: 20px; background-color: #ff4747; color: white; border: none; border-radius: 8px; font-weight: bold; }
+        
+        /* Need More Rest 버튼 스타일 */
+        #retryButton { 
+            display: none; 
+            padding: 15px 30px; 
+            font-size: 20px; 
+            cursor: pointer; 
+            background-color: #ff4747; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold;
+            margin: 20px auto;  /* 상하 여백 추가 및 가운데 정렬 */
+            display: block;
+        }
         #retryButton:hover { background-color: #e63e3e; }
+
         #timer, #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
-        #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 10px; color: blue; }
+        #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 20px; color: blue; }
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
         #rankingTable th { background-color: #f4f4f4; }
@@ -41,9 +56,11 @@
         <button id="nicknameSubmit">Time to Chill</button>
     </div>
 
-    <!-- 최종 시간 및 Need More Rest 버튼 -->
-    <p id="finalTime"></p>
+    <!-- Need More Rest 버튼 -->
     <button id="retryButton" style="display: none;">Need More Rest</button>
+
+    <!-- 최종 시간 -->
+    <p id="finalTime"></p>
 
     <!-- 랭킹 표시 (표) -->
     <table id="rankingTable">
