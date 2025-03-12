@@ -50,8 +50,13 @@
         const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        let retryCount = 0;
+        let maxRetries = 5;
+        let intervalId = null;
+        let isDataLoaded = false; // ✅ 데이터가 정상적으로 로드되었는지 확인하는 변수
+
         async function loadRanking() {
-            console.log("🔄 랭킹 데이터 불러오는 중...");
+            console.log(`🔄 랭킹 데이터 불러오는 중... (시도 ${retryCount + 1}/${maxRetries})`);
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
 
             try {
@@ -60,6 +65,15 @@
                 if (!snapshot.exists()) {
                     console.warn("⚠️ 랭킹 데이터 없음");
                     document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
+                    
+                    // ✅ 데이터가 없으면 재시도 (최대 5번)
+                    if (retryCount < maxRetries) {
+                        retryCount++;
+                        console.log(`⏳ ${retryCount}번째 재시도 중...`);
+                        setTimeout(loadRanking, 3000);
+                    } else {
+                        console.error("❌ 최대 재시도 횟수 초과");
+                    }
                     return;
                 }
 
@@ -85,18 +99,40 @@
 
                 document.getElementById("rankingBody").innerHTML = rankingHTML;
                 console.log("✅ 랭킹 데이터 로드 완료!");
+
+                isDataLoaded = true; // ✅ 데이터가 정상적으로 로드됨
+
+                // ✅ 데이터가 정상적으로 로드되었으므로 추가 Firebase 요청 중단
+                if (intervalId !== null) {
+                    clearInterval(intervalId);
+                    console.log("⏹️ 추가 데이터 로드 중단");
+                }
+
             } catch (error) {
                 console.error("❌ Firebase 데이터 로드 실패:", error);
                 document.getElementById("errorMessage").style.display = "block";
                 document.getElementById("errorMessage").innerText = `❌ 오류 발생: ${error.message}`;
+
+                // ✅ 오류 발생 시 재시도
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`⏳ ${retryCount}번째 재시도 중...`);
+                    setTimeout(loadRanking, 3000);
+                } else {
+                    console.error("❌ 최대 재시도 횟수 초과");
+                }
             }
         }
 
-        // ✅ 데이터 첫 로딩
+        // ✅ 첫 로딩 시도
         loadRanking();
 
-        // ✅ 5초마다 데이터 자동 새로고침
-        setInterval(loadRanking, 5000);
+        // ✅ 만약 데이터가 정상적으로 로드되지 않으면 일정 간격으로 다시 시도 (5초마다)
+        intervalId = setInterval(() => {
+            if (!isDataLoaded) {
+                loadRanking();
+            }
+        }, 5000);
     </script>
 </body>
 </html>
