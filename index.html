@@ -3,13 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자이로스코프 센서 감지 테스트</title>
+    <title>I Need Rest</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        h1 { font-size: 32px; font-weight: bold; margin-bottom: 20px; }
         #nicknameContainer { margin-top: 20px; }
-        #nicknameInput { padding: 10px; font-size: 16px; }
-        #retryButton { display: none; padding: 10px 20px; font-size: 18px; cursor: pointer; margin-top: 20px; }
-        #timer { font-size: 24px; font-weight: bold; margin-top: 10px; color: red; }
+        #nicknameInput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
+        #nicknameSubmit { 
+            display: block; 
+            margin: 20px auto; 
+            padding: 15px 30px; 
+            font-size: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            background-color: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 8px;
+        }
+        #nicknameSubmit:hover { background-color: #45a049; }
+        #retryButton { display: none; padding: 12px 25px; font-size: 18px; cursor: pointer; margin-top: 20px; }
+        #timer, #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
         #failedMessage { display: none; color: red; font-size: 28px; font-weight: bold; margin-top: 20px; }
         #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 10px; color: blue; }
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
@@ -18,13 +32,13 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 센서 감지 테스트</h1>
+    <h1>I Need Rest</h1>
 
     <!-- 닉네임 입력 필드 -->
     <div id="nicknameContainer">
         <p>닉네임을 입력하세요:</p>
         <input type="text" id="nicknameInput" placeholder="닉네임 입력">
-        <button id="nicknameSubmit">확인</button>
+        <button id="nicknameSubmit">Time to Chill</button>
     </div>
 
     <!-- 실패 메시지 -->
@@ -47,7 +61,7 @@
     </table>
 
     <!-- 센서 데이터 -->
-    <p id="data">데이터 없음</p>
+    <p id="data">Beta: 0° / Gamma: 0°</p>
     <p id="timer">00:00.00</p>
 
     <script type="module">
@@ -84,6 +98,9 @@
             localStorage.setItem("nickname", nickname);
             document.getElementById("nicknameContainer").style.display = "none";
 
+            document.getElementById("data").style.display = "block";
+            document.getElementById("timer").style.display = "block";
+
             await requestSensorPermission();
         });
 
@@ -114,47 +131,11 @@
             document.getElementById("rankingTable").style.display = "table";
             document.getElementById("retryButton").style.display = "block";
 
+            document.getElementById("data").style.display = "none";
+            document.getElementById("timer").style.display = "none";
+
             await saveScore(nickname, finalTime);
             await loadLeaderboard();
-        }
-
-        async function saveScore(nickname, time) {
-            await push(ref(db, "scores"), { nickname: nickname, time: parseFloat(time) });
-        }
-
-        async function loadLeaderboard() {
-            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
-
-            try {
-                const snapshot = await get(scoresRef);
-
-                if (!snapshot.exists()) {
-                    document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
-                    return;
-                }
-
-                let scores = [];
-                snapshot.forEach(child => {
-                    scores.push(child.val());
-                });
-
-                scores.sort((a, b) => b.time - a.time);
-
-                let list = document.getElementById("rankingBody");
-                list.innerHTML = "";
-                scores.forEach((score, index) => {
-                    let row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${index + 1}위</td>
-                        <td>${score.nickname}</td>
-                        <td>${formatTime(score.time)}</td>
-                    `;
-                    list.appendChild(row);
-                });
-
-            } catch (error) {
-                console.error("❌ Firebase 데이터 로드 실패:", error);
-            }
         }
 
         async function requestSensorPermission() {
@@ -191,7 +172,7 @@
                 const beta = event.beta;
                 const gamma = event.gamma;
 
-                document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}°\nGamma: ${gamma.toFixed(2)}°`;
+                document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}° / Gamma: ${gamma.toFixed(2)}°`;
 
                 if (initialBeta === null) initialBeta = beta;
                 if (initialGamma === null) initialGamma = gamma;
