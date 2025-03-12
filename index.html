@@ -22,10 +22,31 @@
             border-radius: 8px;
         }
         #nicknameSubmit:hover { background-color: #45a049; }
-        #retryButton { display: none; padding: 12px 25px; font-size: 18px; cursor: pointer; margin-top: 20px; }
-        #timer, #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
+        #doItAgain { 
+            display: none; 
+            padding: 15px 30px; 
+            font-size: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            background-color: #FF6347; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            margin-top: 20px;
+        }
+        #doItAgain:hover { background-color: #E5533D; }
+        #timer { 
+            font-size: 48px; 
+            font-weight: bold; 
+            color: red; 
+            display: none; 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+        }
         #failedMessage { display: none; color: red; font-size: 28px; font-weight: bold; margin-top: 20px; }
-        #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 10px; color: blue; }
+        #finalTime { display: none; font-size: 28px; font-weight: bold; margin-top: 10px; color: blue; }
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
         #rankingTable th { background-color: #f4f4f4; }
@@ -44,7 +65,7 @@
     <!-- 실패 메시지 -->
     <p id="failedMessage">I Need More Rest!</p>
     <p id="finalTime"></p>
-    <button id="retryButton">다시 시작</button>
+    <button id="doItAgain">Do it Again</button>
 
     <!-- 랭킹 표시 (표) -->
     <table id="rankingTable">
@@ -61,7 +82,7 @@
     </table>
 
     <!-- 센서 데이터 -->
-    <p id="data">Beta: 0° / Gamma: 0°</p>
+    <p id="data" style="display: none;">Beta: 0° / Gamma: 0°</p>
     <p id="timer">00:00.00</p>
 
     <script type="module">
@@ -98,9 +119,7 @@
             localStorage.setItem("nickname", nickname);
             document.getElementById("nicknameContainer").style.display = "none";
 
-            document.getElementById("data").style.display = "block";
             document.getElementById("timer").style.display = "block";
-
             await requestSensorPermission();
         });
 
@@ -123,29 +142,27 @@
             }
         }
 
+        function formatTime(seconds) {
+            let minutes = Math.floor(seconds / 60);
+            let remainingSeconds = Math.floor(seconds % 60);
+            let milliseconds = Math.floor((seconds % 1) * 100);
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
+        }
+
         function startTimer() {
             startTime = performance.now();
             timerInterval = setInterval(() => {
                 let elapsedTime = (performance.now() - startTime) / 1000;
-                document.getElementById("timer").innerText = elapsedTime.toFixed(2) + "s";
+                document.getElementById("timer").innerText = formatTime(elapsedTime);
             }, 10);
         }
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
                 if (isTimerStopped) return;
-
-                const beta = event.beta;
-                const gamma = event.gamma;
-
-                document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}° / Gamma: ${gamma.toFixed(2)}°`;
-
-                if (initialBeta === null) initialBeta = beta;
-                if (initialGamma === null) initialGamma = gamma;
-
-                if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
-                    stopTimer();
-                }
+                if (initialBeta === null) initialBeta = event.beta;
+                if (initialGamma === null) initialGamma = event.gamma;
+                if (Math.abs(event.beta - initialBeta) > 1 || Math.abs(event.gamma - initialGamma) > 1) stopTimer();
             });
         }
 
@@ -155,48 +172,20 @@
 
             clearInterval(timerInterval);
             let elapsedTime = (performance.now() - startTime) / 1000;
-            let finalTime = parseFloat(elapsedTime.toFixed(2));
+            let finalTime = formatTime(elapsedTime);
 
             document.getElementById("failedMessage").style.display = "block";
             document.getElementById("finalTime").style.display = "block";
-            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${finalTime}s`;
+            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${finalTime}`;
             document.getElementById("rankingTable").style.display = "table";
+            document.getElementById("doItAgain").style.display = "block";
 
-            document.getElementById("data").style.display = "none";
-            document.getElementById("timer").style.display = "none";
-
-            await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
-            setTimeout(loadLeaderboard, 1000);
+            await push(ref(db, "scores"), { nickname: nickname, time: elapsedTime });
         }
 
-        async function loadLeaderboard() {
-            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
-
-            try {
-                const snapshot = await get(scoresRef);
-
-                if (!snapshot.exists()) {
-                    document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
-                    return;
-                }
-
-                let scores = [];
-                snapshot.forEach(child => {
-                    scores.push(child.val());
-                });
-
-                scores.sort((a, b) => b.time - a.time);
-
-                let list = document.getElementById("rankingBody");
-                list.innerHTML = "";
-                scores.forEach((score, index) => {
-                    list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${score.time.toFixed(2)}s</td></tr>`;
-                });
-
-            } catch (error) {
-                console.error("❌ Firebase 데이터 로드 실패:", error);
-            }
-        }
+        document.getElementById("doItAgain").addEventListener("click", function() {
+            location.reload();
+        });
     </script>
 </body>
 </html>
