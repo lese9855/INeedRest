@@ -114,7 +114,7 @@
 
             document.getElementById("failedMessage").style.display = "block";
             document.getElementById("finalTime").style.display = "block";
-            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${finalTime}s`;
+            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(finalTime)}`;
             document.getElementById("rankingTable").style.display = "table";
 
             document.getElementById("data").style.display = "none";
@@ -124,31 +124,55 @@
             await loadLeaderboard();
         }
 
-        async function loadLeaderboard() {
-            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
-            const snapshot = await get(scoresRef);
-            
-            if (snapshot.exists()) {
-                let scores = [];
-                snapshot.forEach(child => scores.push(child.val()));
-                scores.sort((a, b) => b.time - a.time);
+        function formatTime(seconds) {
+            let minutes = Math.floor(seconds / 60);
+            let remainingSeconds = Math.floor(seconds % 60);
+            let milliseconds = Math.floor((seconds % 1) * 100);
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
+        }
 
-                let list = document.getElementById("rankingBody");
-                list.innerHTML = scores.map((score, index) => `
-                    <tr>
-                        <td>${index + 1}위</td>
-                        <td>${score.nickname}</td>
-                        <td>${score.time.toFixed(2)}s</td>
-                    </tr>`).join('');
+        async function requestSensorPermission() {
+            if (typeof DeviceOrientationEvent.requestPermission === "function") {
+                try {
+                    const permissionState = await DeviceOrientationEvent.requestPermission();
+                    if (permissionState === "granted") {
+                        startTimer();
+                        startGyroscope();
+                    } else {
+                        alert("센서 접근이 거부되었습니다.");
+                    }
+                } catch (error) {
+                    alert("센서 접근을 허용해주세요.");
+                }
+            } else {
+                startTimer();
+                startGyroscope();
             }
+        }
+
+        function startTimer() {
+            startTime = performance.now();
+            timerInterval = setInterval(() => {
+                let elapsedTime = (performance.now() - startTime) / 1000;
+                document.getElementById("timer").innerText = formatTime(elapsedTime);
+            }, 10);
         }
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
                 if (isTimerStopped) return;
-                if (!initialBeta) initialBeta = event.beta;
-                if (!initialGamma) initialGamma = event.gamma;
-                if (Math.abs(event.beta - initialBeta) > 1 || Math.abs(event.gamma - initialGamma) > 1) stopTimer();
+
+                const beta = event.beta;
+                const gamma = event.gamma;
+
+                document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}° / Gamma: ${gamma.toFixed(2)}°`;
+
+                if (initialBeta === null) initialBeta = beta;
+                if (initialGamma === null) initialGamma = gamma;
+
+                if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
+                    stopTimer();
+                }
             });
         }
     </script>
