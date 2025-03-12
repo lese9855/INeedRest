@@ -148,6 +148,55 @@
                 }
             });
         }
+
+        async function stopTimer() {
+            if (isTimerStopped) return;
+            isTimerStopped = true;
+
+            clearInterval(timerInterval);
+            let elapsedTime = (performance.now() - startTime) / 1000;
+            let finalTime = parseFloat(elapsedTime.toFixed(2));
+
+            document.getElementById("failedMessage").style.display = "block";
+            document.getElementById("finalTime").style.display = "block";
+            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${finalTime}s`;
+            document.getElementById("rankingTable").style.display = "table";
+
+            document.getElementById("data").style.display = "none";
+            document.getElementById("timer").style.display = "none";
+
+            await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
+            setTimeout(loadLeaderboard, 1000);
+        }
+
+        async function loadLeaderboard() {
+            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
+
+            try {
+                const snapshot = await get(scoresRef);
+
+                if (!snapshot.exists()) {
+                    document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
+                    return;
+                }
+
+                let scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val());
+                });
+
+                scores.sort((a, b) => b.time - a.time);
+
+                let list = document.getElementById("rankingBody");
+                list.innerHTML = "";
+                scores.forEach((score, index) => {
+                    list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${score.time.toFixed(2)}s</td></tr>`;
+                });
+
+            } catch (error) {
+                console.error("❌ Firebase 데이터 로드 실패:", error);
+            }
+        }
     </script>
 </body>
 </html>
