@@ -45,8 +45,9 @@
             left: 50%; 
             transform: translate(-50%, -50%);
         }
+        #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
         #failedMessage { display: none; color: red; font-size: 28px; font-weight: bold; margin-top: 20px; }
-        #finalTime { display: none; font-size: 28px; font-weight: bold; margin-top: 10px; color: blue; }
+        #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 10px; color: blue; }
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
         #rankingTable th { background-color: #f4f4f4; }
@@ -82,7 +83,7 @@
     </table>
 
     <!-- 센서 데이터 -->
-    <p id="data" style="display: none;">Beta: 0° / Gamma: 0°</p>
+    <p id="data">Beta: 0° / Gamma: 0°</p>
     <p id="timer">00:00.00</p>
 
     <script type="module">
@@ -119,7 +120,9 @@
             localStorage.setItem("nickname", nickname);
             document.getElementById("nicknameContainer").style.display = "none";
 
+            document.getElementById("data").style.display = "block";
             document.getElementById("timer").style.display = "block";
+
             await requestSensorPermission();
         });
 
@@ -142,27 +145,29 @@
             }
         }
 
-        function formatTime(seconds) {
-            let minutes = Math.floor(seconds / 60);
-            let remainingSeconds = Math.floor(seconds % 60);
-            let milliseconds = Math.floor((seconds % 1) * 100);
-            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
-        }
-
         function startTimer() {
             startTime = performance.now();
             timerInterval = setInterval(() => {
                 let elapsedTime = (performance.now() - startTime) / 1000;
-                document.getElementById("timer").innerText = formatTime(elapsedTime);
+                document.getElementById("timer").innerText = elapsedTime.toFixed(2) + "s";
             }, 10);
         }
 
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
                 if (isTimerStopped) return;
-                if (initialBeta === null) initialBeta = event.beta;
-                if (initialGamma === null) initialGamma = event.gamma;
-                if (Math.abs(event.beta - initialBeta) > 1 || Math.abs(event.gamma - initialGamma) > 1) stopTimer();
+
+                const beta = event.beta;
+                const gamma = event.gamma;
+
+                document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}° / Gamma: ${gamma.toFixed(2)}°`;
+
+                if (initialBeta === null) initialBeta = beta;
+                if (initialGamma === null) initialGamma = gamma;
+
+                if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
+                    stopTimer();
+                }
             });
         }
 
@@ -172,20 +177,52 @@
 
             clearInterval(timerInterval);
             let elapsedTime = (performance.now() - startTime) / 1000;
-            let finalTime = formatTime(elapsedTime);
+            let finalTime = parseFloat(elapsedTime.toFixed(2));
 
             document.getElementById("failedMessage").style.display = "block";
             document.getElementById("finalTime").style.display = "block";
-            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${finalTime}`;
+            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${finalTime}s`;
             document.getElementById("rankingTable").style.display = "table";
+
+            document.getElementById("data").style.display = "none";
+            document.getElementById("timer").style.display = "none";
             document.getElementById("doItAgain").style.display = "block";
 
-            await push(ref(db, "scores"), { nickname: nickname, time: elapsedTime });
+            await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
+            setTimeout(loadLeaderboard, 1000);
         }
 
         document.getElementById("doItAgain").addEventListener("click", function() {
             location.reload();
-        });
+
+        async function loadLeaderboard() {
+            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
+
+            try {
+                const snapshot = await get(scoresRef);
+
+                if (!snapshot.exists()) {
+                    document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
+                    return;
+                }
+
+                let scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val());
+                });
+
+                scores.sort((a, b) => b.time - a.time);
+
+                let list = document.getElementById("rankingBody");
+                list.innerHTML = "";
+                scores.forEach((score, index) => {
+                    list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${score.time.toFixed(2)}s</td></tr>`;
+                });
+
+            } catch (error) {
+                console.error("❌ Firebase 데이터 로드 실패:", error);
+            }
+        }
     </script>
 </body>
 </html>
