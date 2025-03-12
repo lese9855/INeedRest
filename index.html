@@ -12,7 +12,7 @@
         #timer { font-size: 24px; font-weight: bold; margin-top: 10px; color: red; }
         #failedMessage { display: none; color: red; font-size: 24px; font-weight: bold; margin-top: 20px; }
         #data { font-size: 20px; font-weight: bold; margin-top: 10px; }
-        #leaderboard { margin-top: 20px; text-align: left; max-width: 300px; margin-left: auto; margin-right: auto; }
+        #leaderboard { display: none; margin-top: 20px; text-align: left; max-width: 300px; margin-left: auto; margin-right: auto; }
     </style>
 </head>
 <body>
@@ -32,7 +32,7 @@
     <!-- 랭킹 표시 -->
     <div id="leaderboard">
         <h2>🏆 랭킹 (Top 10) 🏆</h2>
-        <ol id="rankingList"><li>로딩 중...</li></ol>
+        <ol id="rankingList"></ol>
     </div>
 
     <!-- 센서 데이터 -->
@@ -61,13 +61,8 @@
         let startTime;
         let timerInterval;
         let isTimerStopped = false;
-        let isScoreSaved = false;
         let initialBeta = null;
         let initialGamma = null;
-        let retryCount = 0;
-        let maxRetries = 5;
-        let intervalId = null;
-        let isDataLoaded = false;
 
         document.getElementById("nicknameSubmit").addEventListener("click", async function() {
             nickname = document.getElementById("nicknameInput").value.trim();
@@ -85,6 +80,13 @@
             location.reload();
         });
 
+        function formatTime(seconds) {
+            let minutes = Math.floor(seconds / 60);
+            let remainingSeconds = Math.floor(seconds % 60);
+            let milliseconds = Math.floor((seconds % 1) * 100);
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
+        }
+
         async function stopTimer() {
             if (isTimerStopped) return;
             isTimerStopped = true;
@@ -97,6 +99,7 @@
 
             document.getElementById("failedMessage").style.display = "block";
             document.getElementById("retryButton").style.display = "block";
+            document.getElementById("leaderboard").style.display = "block"; // ✅ Failed 발생 후에만 랭킹 표시
 
             await saveScore(nickname, finalTime);
             await loadLeaderboard();
@@ -107,14 +110,12 @@
         }
 
         async function loadLeaderboard() {
-            console.log(`🔄 랭킹 데이터 불러오는 중... (시도 ${retryCount + 1}/${maxRetries})`);
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
 
             try {
                 const snapshot = await get(scoresRef);
 
                 if (!snapshot.exists()) {
-                    console.warn("⚠️ 랭킹 데이터 없음");
                     document.getElementById("rankingList").innerHTML = "<li>등록된 기록 없음</li>";
                     return;
                 }
@@ -130,17 +131,9 @@
                 list.innerHTML = "";
                 scores.forEach((score, index) => {
                     let li = document.createElement("li");
-                    li.innerText = `${index + 1}위: ${score.nickname} - ${score.time.toFixed(2)}s`;
+                    li.innerText = `${index + 1}위: ${score.nickname} - ${formatTime(score.time)}`;
                     list.appendChild(li);
                 });
-
-                console.log("✅ 랭킹 데이터 로드 완료!");
-                isDataLoaded = true;
-
-                if (intervalId !== null) {
-                    clearInterval(intervalId);
-                    console.log("⏹️ 추가 데이터 로드 중단");
-                }
 
             } catch (error) {
                 console.error("❌ Firebase 데이터 로드 실패:", error);
@@ -170,7 +163,7 @@
             startTime = performance.now();
             timerInterval = setInterval(() => {
                 let elapsedTime = (performance.now() - startTime) / 1000;
-                document.getElementById("timer").innerText = elapsedTime.toFixed(2) + "s";
+                document.getElementById("timer").innerText = formatTime(elapsedTime);
             }, 10);
         }
 
@@ -191,10 +184,6 @@
                 }
             });
         }
-
-        window.onload = async function () {
-            await loadLeaderboard();
-        };
     </script>
 </body>
 </html>
