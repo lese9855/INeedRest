@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 센서 테스트v12</h1>
+    <h1>자이로스코프 센서 테스트v13</h1>
 
     <!-- 닉네임 입력 필드 -->
     <div id="nicknameContainer">
@@ -65,7 +65,6 @@
         let initialBeta = null;
         let initialGamma = null;
 
-        // ✅ 닉네임 입력 후 즉시 센서 활성화
         document.getElementById("nicknameSubmit").addEventListener("click", async function() {
             nickname = document.getElementById("nicknameInput").value.trim();
             if (nickname === "") {
@@ -78,7 +77,6 @@
             await requestSensorPermission();
         });
 
-        // ✅ "다시 시작" 버튼 클릭 시 초기화
         document.getElementById("retryButton").addEventListener("click", function() {
             location.reload();
         });
@@ -104,28 +102,41 @@
             await push(ref(db, "scores"), { nickname: nickname, time: parseFloat(time) });
         }
 
-        async function loadLeaderboard() {
+        async function loadLeaderboard(retryCount = 0) {
+            console.log("🔄 랭킹 데이터 불러오는 중...");
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
-            const snapshot = await get(scoresRef);
 
-            if (!snapshot.exists()) return;
+            try {
+                const snapshot = await get(scoresRef);
 
-            let scores = [];
-            snapshot.forEach(child => {
-                scores.push(child.val());
-            });
+                if (!snapshot.exists()) {
+                    console.warn("⚠️ 랭킹 데이터 없음");
+                    if (retryCount < 3) {
+                        console.log(`⏳ ${retryCount + 1}번째 재시도 중...`);
+                        setTimeout(() => loadLeaderboard(retryCount + 1), 500);
+                    }
+                    return;
+                }
 
-            scores.sort((a, b) => b.time - a.time); // ✅ 시간 긴 순 정렬
+                let scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val());
+                });
 
-            let list = document.getElementById("rankingList");
-            list.innerHTML = "";
-            scores.forEach((score, index) => {
-                let li = document.createElement("li");
-                li.innerText = `${index + 1}위: ${score.nickname} - ${score.time.toFixed(2)}s`;
-                list.appendChild(li);
-            });
+                scores.sort((a, b) => b.time - a.time);
 
-            document.getElementById("leaderboard").style.display = "block";
+                let list = document.getElementById("rankingList");
+                list.innerHTML = "";
+                scores.forEach((score, index) => {
+                    let li = document.createElement("li");
+                    li.innerText = `${index + 1}위: ${score.nickname} - ${score.time.toFixed(2)}s`;
+                    list.appendChild(li);
+                });
+
+                document.getElementById("leaderboard").style.display = "block";
+            } catch (error) {
+                console.error("❌ Firebase 데이터 로드 실패:", error);
+            }
         }
 
         async function requestSensorPermission() {
