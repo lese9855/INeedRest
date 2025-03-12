@@ -22,30 +22,8 @@
             border-radius: 8px;
         }
         #nicknameSubmit:hover { background-color: #45a049; }
-        #doItAgain { 
-            display: none; 
-            padding: 15px 30px; 
-            font-size: 20px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            background-color: #FF6347; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            margin-top: 20px;
-        }
-        #doItAgain:hover { background-color: #E5533D; }
-        #timer { 
-            font-size: 48px; 
-            font-weight: bold; 
-            color: red; 
-            display: none; 
-            position: absolute; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%);
-        }
-        #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
+        #retryButton { display: none; padding: 12px 25px; font-size: 18px; cursor: pointer; margin-top: 20px; }
+        #timer, #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
         #failedMessage { display: none; color: red; font-size: 28px; font-weight: bold; margin-top: 20px; }
         #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 10px; color: blue; }
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
@@ -66,7 +44,7 @@
     <!-- 실패 메시지 -->
     <p id="failedMessage">I Need More Rest!</p>
     <p id="finalTime"></p>
-    <button id="doItAgain">Do it Again</button>
+    <button id="retryButton">다시 시작</button>
 
     <!-- 랭킹 표시 (표) -->
     <table id="rankingTable">
@@ -186,14 +164,10 @@
 
             document.getElementById("data").style.display = "none";
             document.getElementById("timer").style.display = "none";
-            document.getElementById("doItAgain").style.display = "block";
 
             await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
             setTimeout(loadLeaderboard, 1000);
         }
-
-        document.getElementById("doItAgain").addEventListener("click", function() {
-            location.reload();
 
         async function loadLeaderboard() {
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
