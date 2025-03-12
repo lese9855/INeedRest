@@ -22,25 +22,9 @@
             border-radius: 8px;
         }
         #nicknameSubmit:hover { background-color: #45a049; }
-        #retryButton { 
-            display: none; 
-            padding: 15px 30px; 
-            font-size: 20px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            background-color: #ff4747; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            position: absolute;  /* 🔹 화면 중앙 정렬을 위해 추가 */
-            left: 50%; 
-            top: 50%; 
-            transform: translate(-50%, -50%);  /* 🔹 중앙 배치 */
-        }
-
+        #retryButton { display: none; padding: 15px 30px; font-size: 20px; cursor: pointer; margin-top: 20px; background-color: #ff4747; color: white; border: none; border-radius: 8px; font-weight: bold; }
         #retryButton:hover { background-color: #e63e3e; }
         #timer, #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
-        #failedMessage { display: none; color: red; font-size: 28px; font-weight: bold; margin-top: 20px; }
         #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 10px; color: blue; }
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
@@ -57,14 +41,9 @@
         <button id="nicknameSubmit">Time to Chill</button>
     </div>
 
-    <!-- 실패 메시지 -->
-    <p id="failedMessage">I Need More Rest!</p>
-    
-    <!-- Retry 버튼 -->
-    <button id="retryButton">Retry</button>
-
-    <!-- 종료된 타이머 -->
+    <!-- 최종 시간 및 Need More Rest 버튼 -->
     <p id="finalTime"></p>
+    <button id="retryButton" style="display: none;">Need More Rest</button>
 
     <!-- 랭킹 표시 (표) -->
     <table id="rankingTable">
@@ -177,7 +156,6 @@
             let elapsedTime = (performance.now() - startTime) / 1000;
             let finalTime = parseFloat(elapsedTime.toFixed(2));
 
-            document.getElementById("failedMessage").style.display = "block";
             document.getElementById("finalTime").style.display = "block";
             document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${finalTime}s`;
             document.getElementById("rankingTable").style.display = "table";
@@ -185,7 +163,7 @@
             document.getElementById("data").style.display = "none";
             document.getElementById("timer").style.display = "none";
 
-            // Retry 버튼 표시
+            // "Need More Rest" 버튼 표시
             document.getElementById("retryButton").style.display = "block"; 
 
             await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
@@ -222,7 +200,7 @@
         }
 
         document.getElementById("retryButton").addEventListener("click", function() {
-            location.reload();
+            location.reload(); // 게임 초기화
         });
     </script>
 </body>
