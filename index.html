@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자이로스코프 감지v10</title>
+    <title>자이로스코프 감지</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         #nicknameContainer { margin-top: 20px; }
@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 감지</h1>
+    <h1>자이로스코프 감지v11</h1>
 
     <!-- 닉네임 입력 필드 -->
     <div id="nicknameContainer">
@@ -41,7 +41,7 @@
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getDatabase, ref, push, query, orderByChild, limitToFirst, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+        import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
@@ -93,15 +93,15 @@
 
             localStorage.setItem("stoppedTime", finalTime);
 
+            document.getElementById("failedMessage").style.display = "block";
+            document.getElementById("retryButton").style.display = "block";
+
             if (!isScoreSaved) {
                 await saveScore(nickname, finalTime);
                 isScoreSaved = true;
             }
 
-            await loadLeaderboard(); // ✅ 랭킹 데이터 로드 후 Failed 표시
-            document.getElementById("failedMessage").style.display = "block";
-            document.getElementById("retryButton").style.display = "block";
-            document.getElementById("leaderboard").style.display = "block";
+            await loadLeaderboard();
         }
 
         async function saveScore(nickname, time) {
@@ -109,7 +109,7 @@
         }
 
         async function loadLeaderboard() {
-            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToFirst(10));
+            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
             const snapshot = await get(scoresRef);
 
             let scores = [];
@@ -126,6 +126,8 @@
                 li.innerText = `${index + 1}위: ${score.nickname} - ${score.time}s`;
                 list.appendChild(li);
             });
+
+            document.getElementById("leaderboard").style.display = "block";
         }
 
         async function requestSensorPermission() {
