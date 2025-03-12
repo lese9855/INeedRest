@@ -8,10 +8,11 @@
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         #nicknameContainer { margin-top: 20px; }
         #nicknameInput { padding: 10px; font-size: 16px; }
-        #retryButton { display: none; padding: 10px 20px; font-size: 18px; cursor: pointer; }
+        #retryButton { display: none; padding: 10px 20px; font-size: 18px; cursor: pointer; margin-top: 20px; }
         #timer { font-size: 24px; font-weight: bold; margin-top: 10px; color: red; }
         #failedMessage { display: none; color: red; font-size: 24px; font-weight: bold; margin-top: 20px; }
         #data { font-size: 20px; font-weight: bold; margin-top: 10px; }
+        #leaderboard { display: none; margin-top: 20px; text-align: left; max-width: 300px; margin-left: auto; margin-right: auto; }
     </style>
 </head>
 <body>
@@ -28,13 +29,19 @@
     <p id="failedMessage">🚨 Failed! 🚨</p>
     <button id="retryButton" style="display: none;">다시 시작</button>
 
+    <!-- 랭킹 표시 -->
+    <div id="leaderboard">
+        <h2>🏆 랭킹 (Top 10) 🏆</h2>
+        <ol id="rankingList"></ol>
+    </div>
+
     <!-- 센서 데이터 -->
     <p id="data">데이터 없음</p>
     <p id="timer">00:00.00</p>
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+        import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
@@ -84,6 +91,8 @@
             nickname = localStorage.getItem("nickname") || "";
             document.getElementById("failedMessage").style.display = "none";
             document.getElementById("retryButton").style.display = "none";
+            document.getElementById("leaderboard").style.display = "none";
+            document.getElementById("rankingList").innerHTML = "";
             document.getElementById("data").innerText = "데이터 없음";
             document.getElementById("timer").innerText = "00:00.00";
         }
@@ -128,11 +137,8 @@
 
             clearInterval(timerInterval);
             let elapsedTime = (performance.now() - startTime) / 1000;
-            let minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
-            let seconds = String(Math.floor(elapsedTime % 60)).padStart(2, '0');
-            let milliseconds = String((elapsedTime % 1).toFixed(2).substring(2)).padStart(2, '0');
+            let finalTime = elapsedTime.toFixed(2);
 
-            let finalTime = `${minutes}:${seconds}.${milliseconds}`;
             localStorage.setItem("stoppedTime", finalTime);
 
             if (!isScoreSaved) {
@@ -142,10 +148,11 @@
 
             document.getElementById("failedMessage").style.display = "block";
             document.getElementById("retryButton").style.display = "block";
+            loadLeaderboard();
         }
 
         function saveScore(nickname, time) {
-            push(ref(db, "scores"), { nickname: nickname, time: time })
+            push(ref(db, "scores"), { nickname: nickname, time: parseFloat(time) })
                 .then(() => {
                     console.log(`✅ Firebase 저장 성공: ${nickname} - ${time}`);
                 })
@@ -155,6 +162,29 @@
                 });
         }
 
+        function loadLeaderboard() {
+            const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
+
+            get(scoresRef).then(snapshot => {
+                let scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val());
+                });
+
+                scores.sort((a, b) => b.time - a.time); // ✅ 시간 긴 순 정렬
+
+                let list = document.getElementById("rankingList");
+                list.innerHTML = "";
+                scores.forEach((score, index) => {
+                    let li = document.createElement("li");
+                    li.innerText = `${index + 1}위: ${score.nickname} - ${score.time}s`;
+                    list.appendChild(li);
+                });
+
+                document.getElementById("leaderboard").style.display = "block";
+            });
+        }
+
         function startGyroscope() {
             window.addEventListener("deviceorientation", function(event) {
                 if (isTimerStopped) return;
@@ -162,15 +192,12 @@
                 const beta = event.beta;
                 const gamma = event.gamma;
 
-                document.getElementById("data").innerText = `Beta (x축): ${beta.toFixed(2)}°\nGamma (y축): ${gamma.toFixed(2)}°`;
+                document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}°\nGamma: ${gamma.toFixed(2)}°`;
 
                 if (initialBeta === null) initialBeta = beta;
                 if (initialGamma === null) initialGamma = gamma;
 
-                const betaChange = Math.abs(beta - initialBeta);
-                const gammaChange = Math.abs(gamma - initialGamma);
-
-                if (betaChange > 1 || gammaChange > 1) {
+                if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
                     stopTimer();
                 }
             });
