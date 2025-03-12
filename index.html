@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>자이로스코프 센서 감지 테스트v14</h1>
+    <h1>자이로스코프 센서 감지 테스트v15</h1>
 
     <!-- 닉네임 입력 필드 -->
     <div id="nicknameContainer">
@@ -32,7 +32,7 @@
     <!-- 랭킹 표시 -->
     <div id="leaderboard">
         <h2>🏆 랭킹 (Top 10) 🏆</h2>
-        <ol id="rankingList">로딩 중...</ol>
+        <ol id="rankingList"><li>로딩 중...</li></ol>
     </div>
 
     <!-- 센서 데이터 -->
@@ -102,8 +102,8 @@
             await push(ref(db, "scores"), { nickname: nickname, time: parseFloat(time) });
         }
 
-        async function loadLeaderboard() {
-            console.log("🔄 랭킹 데이터 불러오는 중...");
+        async function loadLeaderboard(retryCount = 0) {
+            console.log(`🔄 랭킹 데이터 불러오는 중... (시도 ${retryCount + 1}/5)`);
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
 
             try {
@@ -111,7 +111,12 @@
 
                 if (!snapshot.exists()) {
                     console.warn("⚠️ 랭킹 데이터 없음");
-                    document.getElementById("rankingList").innerHTML = "<li>등록된 기록 없음</li>";
+                    if (retryCount < 5) {
+                        console.log(`⏳ ${retryCount + 1}번째 재시도 중...`);
+                        setTimeout(() => loadLeaderboard(retryCount + 1), 3000);
+                    } else {
+                        document.getElementById("rankingList").innerHTML = "<li>등록된 기록 없음</li>";
+                    }
                     return;
                 }
 
