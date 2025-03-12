@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 데이터 디버그</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #dataContainer { margin-top: 20px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Firebase 데이터 디버그 페이지</h1>
+    <p>이 페이지에서 Firebase 데이터 로딩 상태를 확인할 수 있습니다.</p>
+
+    <div id="dataContainer">
+        <h2>📊 Firebase 데이터</h2>
+        <pre id="firebaseData">데이터 로딩 중...</pre>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+        // ✅ Firebase 설정
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
+        };
+
+        const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        async function fetchFirebaseData() {
+            console.log("🔄 Firebase 데이터 로딩 중...");
+            const scoresRef = ref(db, "scores");
+
+            try {
+                const snapshot = await get(scoresRef);
+                if (!snapshot.exists()) {
+                    console.warn("⚠️ Firebase 데이터 없음");
+                    document.getElementById("firebaseData").innerText = "⚠️ 데이터 없음";
+                    return;
+                }
+
+                const data = snapshot.val();
+                console.log("✅ Firebase 데이터 로드 완료:", data);
+
+                // ✅ JSON 데이터 포맷팅 후 출력
+                document.getElementById("firebaseData").innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error("❌ Firebase 데이터 로드 실패:", error);
+                document.getElementById("firebaseData").innerText = `❌ 오류 발생: ${error.message}`;
+            }
+        }
+
+        // ✅ 데이터 첫 로딩
+        fetchFirebaseData();
+
+        // ✅ 5초마다 데이터 자동 새로고침
+        setInterval(fetchFirebaseData, 5000);
+    </script>
+</body>
+</html>
