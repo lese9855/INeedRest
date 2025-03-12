@@ -116,14 +116,6 @@
                 if (!snapshot.exists()) {
                     console.warn("⚠️ 랭킹 데이터 없음");
                     document.getElementById("rankingList").innerHTML = "<li>등록된 기록 없음</li>";
-
-                    if (retryCount < maxRetries) {
-                        retryCount++;
-                        console.log(`⏳ ${retryCount}번째 재시도 중...`);
-                        setTimeout(loadLeaderboard, 3000);
-                    } else {
-                        console.error("❌ 최대 재시도 횟수 초과");
-                    }
                     return;
                 }
 
@@ -152,13 +144,6 @@
 
             } catch (error) {
                 console.error("❌ Firebase 데이터 로드 실패:", error);
-                if (retryCount < maxRetries) {
-                    retryCount++;
-                    console.log(`⏳ ${retryCount}번째 재시도 중...`);
-                    setTimeout(loadLeaderboard, 3000);
-                } else {
-                    console.error("❌ 최대 재시도 횟수 초과");
-                }
             }
         }
 
@@ -179,6 +164,32 @@
                 startTimer();
                 startGyroscope();
             }
+        }
+
+        function startTimer() {
+            startTime = performance.now();
+            timerInterval = setInterval(() => {
+                let elapsedTime = (performance.now() - startTime) / 1000;
+                document.getElementById("timer").innerText = elapsedTime.toFixed(2) + "s";
+            }, 10);
+        }
+
+        function startGyroscope() {
+            window.addEventListener("deviceorientation", function(event) {
+                if (isTimerStopped) return;
+
+                const beta = event.beta;
+                const gamma = event.gamma;
+
+                document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}°\nGamma: ${gamma.toFixed(2)}°`;
+
+                if (initialBeta === null) initialBeta = beta;
+                if (initialGamma === null) initialGamma = gamma;
+
+                if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
+                    stopTimer();
+                }
+            });
         }
 
         window.onload = async function () {
