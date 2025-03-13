@@ -1,0 +1,26 @@
+name: Deploy Firebase App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # main 브랜치에 push할 때 배포
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Create Config File
+        run: |
+          echo '{
+            "API_KEY": "${{ secrets.FIREBASE_API_KEY }}"
+          }' > config.json
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: . # index.html이 있는 폴더
