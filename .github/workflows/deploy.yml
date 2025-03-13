@@ -3,7 +3,10 @@ name: Deploy Firebase App to GitHub Pages
 on:
   push:
     branches:
-      - main  # main 브랜치에 push할 때 배포
+      - main  # main 브랜치에서 push가 발생하면 실행
+
+permissions:
+  contents: write  # GitHub Actions가 gh-pages 브랜치에 푸시할 권한 부여
 
 jobs:
   deploy:
@@ -12,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 전체 기록을 가져와야 gh-pages 브랜치를 업데이트할 수 있음
 
       - name: Create Config File
         run: |
