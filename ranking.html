@@ -34,7 +34,7 @@
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getDatabase, ref, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+        import { getDatabase, ref, query, orderByChild, limitToLast, onValue, off } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
         // ✅ Firebase 설정
         const firebaseConfig = {
@@ -50,91 +50,70 @@
 
         const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
+        const maxRetries = 5;
         let retryCount = 0;
-        let maxRetries = 5;
-        let intervalId = null;
-        let isDataLoaded = false; // ✅ 데이터가 정상적으로 로드되었는지 확인하는 변수
 
-        async function loadRanking() {
-            console.log(`🔄 랭킹 데이터 불러오는 중... (시도 ${retryCount + 1}/${maxRetries})`);
+        function loadRankingRealTime() {
             const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
 
-            try {
-                const snapshot = await get(scoresRef);
+            const updateRanking = () => {
+                console.log(`🔄 데이터 로딩 시도 중... (시도 ${retryCount + 1}/${maxRetries})`);
 
-                if (!snapshot.exists()) {
-                    console.warn("⚠️ 랭킹 데이터 없음");
-                    document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
-                    
-                    // ✅ 데이터가 없으면 재시도 (최대 5번)
+                onValue(scoresRef, (snapshot) => {
+                    if (!snapshot.exists()) {
+                        console.warn("⚠️ 랭킹 데이터 없음");
+                        document.getElementById("rankingBody").innerHTML = "<tr><td colspan='4'>⚠️ 데이터 없음</td></tr>";
+                        return;
+                    }
+
+                    let scores = [];
+                    snapshot.forEach(child => {
+                        scores.push(child.val());
+                    });
+
+                    // ✅ 시간 긴 순 정렬
+                    scores.sort((a, b) => b.time - a.time);
+
+                    // ✅ 랭킹 리스트 업데이트
+                    let rankingHTML = "";
+                    scores.forEach((score, index) => {
+                        rankingHTML += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${score.nickname}</td>
+                                <td>${score.majorname}</td>
+                                <td>${score.time.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+
+                    document.getElementById("rankingBody").innerHTML = rankingHTML;
+                    console.log("✅ 랭킹 실시간 업데이트 완료!");
+
+                    // ✅ 데이터 로드 성공 시 재시도 카운트 초기화
+                    retryCount = 0;
+                }, (error) => {
+                    console.error("❌ Firebase 데이터 로드 실패:", error);
+                    document.getElementById("errorMessage").style.display = "block";
+                    document.getElementById("errorMessage").innerText = `❌ 오류 발생: ${error.message}`;
+
+                    // ✅ 재시도 로직
                     if (retryCount < maxRetries) {
                         retryCount++;
                         console.log(`⏳ ${retryCount}번째 재시도 중...`);
-                        setTimeout(loadRanking, 3000);
+                        off(scoresRef); // 기존 리스너 제거
+                        setTimeout(updateRanking, 3000); // 3초 후 재시도
                     } else {
                         console.error("❌ 최대 재시도 횟수 초과");
                     }
-                    return;
-                }
-
-                let scores = [];
-                snapshot.forEach(child => {
-                    scores.push(child.val());
                 });
+            };
 
-                // ✅ 시간 긴 순 정렬
-                scores.sort((a, b) => b.time - a.time);
-
-                // ✅ 랭킹 리스트 업데이트
-                let rankingHTML = "";
-                scores.forEach((score, index) => {
-                    rankingHTML += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${score.nickname}</td>
-                            <td>${score.majorname}</td>
-                            <td>${score.time.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-
-                document.getElementById("rankingBody").innerHTML = rankingHTML;
-                console.log("✅ 랭킹 데이터 로드 완료!");
-
-                isDataLoaded = true; // ✅ 데이터가 정상적으로 로드됨
-
-                // ✅ 데이터가 정상적으로 로드되었으므로 추가 Firebase 요청 중단
-                if (intervalId !== null) {
-                    clearInterval(intervalId);
-                    console.log("⏹️ 추가 데이터 로드 중단");
-                }
-
-            } catch (error) {
-                console.error("❌ Firebase 데이터 로드 실패:", error);
-                document.getElementById("errorMessage").style.display = "block";
-                document.getElementById("errorMessage").innerText = `❌ 오류 발생: ${error.message}`;
-
-                // ✅ 오류 발생 시 재시도
-                if (retryCount < maxRetries) {
-                    retryCount++;
-                    console.log(`⏳ ${retryCount}번째 재시도 중...`);
-                    setTimeout(loadRanking, 3000);
-                } else {
-                    console.error("❌ 최대 재시도 횟수 초과");
-                }
-            }
+            updateRanking();
         }
 
-        // ✅ 첫 로딩 시도
-        loadRanking();
-
-        // ✅ 만약 데이터가 정상적으로 로드되지 않으면 일정 간격으로 다시 시도 (5초마다)
-        intervalId = setInterval(() => {
-            if (!isDataLoaded) {
-                loadRanking();
-            }
-        }, 5000);
+        // ✅ 실시간 랭킹 로드
+        loadRankingRealTime();
     </script>
 </body>
 </html>
