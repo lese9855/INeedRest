@@ -203,7 +203,10 @@
             isTimerStopped = true;
             clearInterval(timerInterval);
 
-            const finalElapsedTime = (new Date() - startTime - totalPausedTime) / 1000;
+            const now = new Date();
+            const finalElapsedTime = (now - startTime - totalPausedTime) / 1000;
+            finalRecordedTime = finalElapsedTime;
+            
             document.getElementById("finalTime").style.display = "block";
             document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(finalElapsedTime)}`;
             document.getElementById("rankingTable").style.display = "table";
