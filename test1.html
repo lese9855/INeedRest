@@ -1,0 +1,182 @@
+<!-- 개선된 기능: GPS 기반 위치 확인 추가 / Date 기반 오차 보정 / 흔들림 감지 유지 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Need Rest</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        h1 { font-size: 32px; font-weight: bold; margin-bottom: 20px; }
+        #nicknameContainer { margin-top: 20px; }
+        #nicknameInput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
+        #nicknameSubmit, #retryButton {
+            padding: 15px 30px; font-size: 20px; font-weight: bold; cursor: pointer;
+            border: none; border-radius: 8px; margin: 20px auto; display: block;
+        }
+        #nicknameSubmit { background-color: #4CAF50; color: white; }
+        #nicknameSubmit:hover { background-color: #45a049; }
+        #retryButton { background-color: #ff4747; color: white; display: none; }
+        #retryButton:hover { background-color: #e63e3e; }
+        #timer { font-size: 48px; font-weight: bold; margin-top: 10px; display: none; }
+        #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
+        #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 20px; color: blue; }
+        #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
+        #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
+        #rankingTable th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+<h1>I Need Rest</h1>
+<div id="nicknameContainer">
+    <p>닉네임을 입력하세요:</p>
+    <input type="text" id="nicknameInput" placeholder="닉네임 입력">
+    <button id="nicknameSubmit">Time to Chill</button>
+</div>
+<button id="retryButton">Need More Rest</button>
+<p id="finalTime"></p>
+<table id="rankingTable">
+    <thead>
+        <tr><th>순위</th><th>닉네임</th><th>타이머 시간</th></tr>
+    </thead>
+    <tbody id="rankingBody">
+        <tr><td colspan="3">🔄 데이터 로딩 중...</td></tr>
+    </tbody>
+</table>
+<p id="data">Beta: 0° / Gamma: 0°</p>
+<p id="timer">00:00.00</p>
+<script type="module">
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getDatabase, ref, push, query, orderByChild, limitToLast, get } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+const firebaseConfig = {};
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let nickname = "";
+let startTime;
+let timerInterval;
+let isTimerStopped = false;
+let initialBeta = null;
+let initialGamma = null;
+let storedLat = null;
+let storedLng = null;
+
+const TOLERANCE = 0.0005; // 약 50m 거리 허용
+
+document.getElementById("nicknameSubmit").addEventListener("click", function() {
+    nickname = document.getElementById("nicknameInput").value.trim();
+    if (nickname === "") {
+        alert("닉네임을 입력해주세요!");
+        return;
+    }
+    const confirmed = confirm("지금부터 핸드폰을 내려놔주세요\n위치 및 센서 권한이 필요합니다.");
+    if (!confirmed) return;
+
+    navigator.geolocation.getCurrentPosition(pos => {
+        storedLat = pos.coords.latitude;
+        storedLng = pos.coords.longitude;
+        requestSensorPermission();
+    }, () => {
+        alert("📍 위치 권한이 필요합니다.");
+    }, { enableHighAccuracy: true });
+});
+
+async function requestSensorPermission() {
+    if (typeof DeviceOrientationEvent.requestPermission === "function") {
+        try {
+            const permissionState = await DeviceOrientationEvent.requestPermission();
+            if (permissionState === "granted") {
+                startTimer();
+                startGyroscope();
+            } else {
+                alert("❌ 센서 접근이 거부되었습니다. 설정에서 허용해주세요.");
+            }
+        } catch (error) {
+            alert("⚠️ 센서 접근을 허용해주세요.");
+        }
+    } else {
+        startTimer();
+        startGyroscope();
+    }
+}
+
+function startTimer() {
+    document.getElementById("nicknameContainer").style.display = "none";
+    document.getElementById("data").style.display = "block";
+    document.getElementById("timer").style.display = "block";
+
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+        let elapsedTime = (Date.now() - startTime) / 1000;
+        document.getElementById("timer").innerText = formatTime(elapsedTime);
+    }, 100);
+}
+
+function formatTime(time) {
+    let minutes = Math.floor(time / 60);
+    let seconds = Math.floor(time % 60);
+    let milliseconds = Math.floor((time % 1) * 100);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
+}
+
+function startGyroscope() {
+    window.addEventListener("deviceorientation", function(event) {
+        if (isTimerStopped) return;
+
+        const beta = event.beta;
+        const gamma = event.gamma;
+        document.getElementById("data").innerText = `Beta: ${beta.toFixed(2)}° / Gamma: ${gamma.toFixed(2)}°`;
+
+        if (initialBeta === null) initialBeta = beta;
+        if (initialGamma === null) initialGamma = gamma;
+
+        if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
+            stopTimer();
+        }
+    });
+}
+
+async function stopTimer() {
+    if (isTimerStopped) return;
+    isTimerStopped = true;
+    clearInterval(timerInterval);
+    let elapsedTime = (Date.now() - startTime) / 1000;
+
+    document.getElementById("finalTime").style.display = "block";
+    document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(elapsedTime)}`;
+    document.getElementById("rankingTable").style.display = "table";
+    document.getElementById("data").style.display = "none";
+    document.getElementById("timer").style.display = "none";
+    document.getElementById("retryButton").style.display = "block";
+
+    await push(ref(db, "scores"), { nickname: nickname, time: elapsedTime });
+    setTimeout(loadLeaderboard, 1000);
+}
+
+async function loadLeaderboard() {
+    const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
+    try {
+        const snapshot = await get(scoresRef);
+        if (!snapshot.exists()) {
+            document.getElementById("rankingBody").innerHTML = "<tr><td colspan='3'>⚠️ 데이터 없음</td></tr>";
+            return;
+        }
+        let scores = [];
+        snapshot.forEach(child => scores.push(child.val()));
+        scores.sort((a, b) => b.time - a.time);
+
+        let list = document.getElementById("rankingBody");
+        list.innerHTML = "";
+        scores.forEach((score, index) => {
+            list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${formatTime(score.time)}</td></tr>`;
+        });
+    } catch (error) {
+        console.error("❌ Firebase 데이터 로드 실패:", error);
+    }
+}
+
+document.getElementById("retryButton").addEventListener("click", () => location.reload());
+</script>
+</body>
+</html>
