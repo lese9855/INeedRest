@@ -138,19 +138,21 @@
         }
         
         function startTimer() {
-            startTime = new Date();
+            startTime = Date.now();
             isTimerStopped = false;
             initialBeta = null;
             initialGamma = null;
 
-            timerInterval = setInterval(updateTimer, 10);
+            requestAnimationFrame(updateTimer);
         }
 
         function updateTimer() {
             if (isTimerStopped) return;
-            const now = new Date();
-            const elapsedTime = (now - startTime - totalPausedTime) / 1000;
+            const now = Date.now();
+            const elapsedTime = (now - startTime) / 1000;
             document.getElementById("timer").innerText = formatTime(elapsedTime);
+
+            requestAnimationFrame(updateTimer);
         }
 
         function formatTime(time) {
@@ -186,10 +188,8 @@
         async function stopTimer() {
             if (isTimerStopped) return;
             isTimerStopped = true;
-            clearInterval(timerInterval);
 
-            const now = new Date();
-            const finalElapsedTime = (now - startTime - totalPausedTime) / 1000;
+            const finalElapsedTime = (Date.now() - startTime) / 1000;
             
             document.getElementById("finalTime").style.display = "block";
             document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(finalElapsedTime)}`;
