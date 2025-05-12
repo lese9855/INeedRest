@@ -44,9 +44,12 @@
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
         #rankingTable th { background-color: #f4f4f4; }
+        body.bg1 { background: url('background1.html') no-repeat center center / cover; }
+        body.bg2 { background: url('background2.html') no-repeat center center / cover; }
+        body.bg3 { background: url('background3.html') no-repeat center center / cover; }
     </style>
 </head>
-<body>
+<body class="bg1">
     <h1>I Need Rest</h1>
 
     <div id="nicknameContainer">
@@ -104,6 +107,14 @@
         let initialBeta = null;
         let initialGamma = null;
 
+        function switchBackground(className) {
+            document.body.className = className;
+        }
+
+        window.addEventListener('load', () => {
+            switchBackground('bg1');
+        });
+
         document.getElementById("nicknameSubmit").addEventListener("click", async function() {
             nickname = document.getElementById("nicknameInput").value.trim();
             if (nickname === "") {
@@ -134,6 +145,7 @@
                 try {
                     const permissionState = await DeviceOrientationEvent.requestPermission();
                     if (permissionState === "granted") {
+                        switchBackground('bg2');
                         startTimer();
                         startGyroscope();
                     } else {
@@ -192,6 +204,7 @@
 
                 if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
                     stopTimer();
+                    switchBackground('bg3');
                 }
             });
         }
