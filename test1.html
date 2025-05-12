@@ -95,6 +95,7 @@
         let nickname = "";
         let startTime;
         let lastPausedTime = null;
+        let elapsedPauseTime = 0;
         let timerInterval;
         let isTimerStopped = false;
         let initialBeta = null;
@@ -138,25 +139,24 @@
             }
         }
         function startTimer() {
-            startTime = performance.now();
+            startTime = new Date();
             lastPausedTime = null;
+            elapsedPauseTime = 0;  // 누적 일시정지 시간
             document.addEventListener("visibilitychange", handleVisibilityChange);
+
             timerInterval = setInterval(() => {
-                let currentTime = performance.now();
-                let elapsedTime = (currentTime - startTime) / 1000;
-                if (lastPausedTime) {
-                    elapsedTime -= (performance.now() - lastPausedTime) / 1000;
-                }
+                let currentTime = new Date();
+                let elapsedTime = (currentTime - startTime - elapsedPauseTime) / 1000;
                 document.getElementById("timer").innerText = formatTime(elapsedTime);
             }, 10);
         }
-
+        
         function handleVisibilityChange() {
             if (document.visibilityState === "hidden") {
                 lastPausedTime = new Date();
             } else if (document.visibilityState === "visible" && lastPausedTime) {
-                let pauseDuration = new Date() - lastPausedTime;
-                startTime = new Date(startTime.getTime() + pauseDuration);
+                // 총 일시정지 시간을 누적하여 빼줌
+                elapsedPauseTime += new Date() - lastPausedTime;
                 lastPausedTime = null;
             }
         }
@@ -165,7 +165,7 @@
             let minutes = Math.floor(time / 60);
             let seconds = Math.floor(time % 60);
             let milliseconds = Math.floor((time % 1) * 100);
-            
+    
             return (
                 String(minutes).padStart(2, '0') + ":" + 
                 String(seconds).padStart(2, '0') + "." + 
@@ -190,24 +190,22 @@
                 }
             });
         }
-
+        
         async function stopTimer() {
             if (isTimerStopped) return;
             isTimerStopped = true;
 
             clearInterval(timerInterval);
-            let elapsedTime = (performance.now() - startTime) / 1000;
+            let finalTime = (new Date() - startTime - elapsedPauseTime) / 1000;
 
             document.getElementById("finalTime").style.display = "block";
-            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(elapsedTime)}`;
+            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(finalTime)}`;
             document.getElementById("rankingTable").style.display = "table";
-
             document.getElementById("data").style.display = "none";
             document.getElementById("timer").style.display = "none";
-
             document.getElementById("retryButton").style.display = "block";
 
-            await push(ref(db, "scores"), { nickname: nickname, time: elapsedTime });
+            await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
             setTimeout(loadLeaderboard, 1000);
         }
 
