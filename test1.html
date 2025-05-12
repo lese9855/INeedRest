@@ -136,22 +136,28 @@
                 startGyroscope();
             }
         }
-
         function startTimer() {
             startTime = new Date();
+            lastPausedTime = null;
             document.addEventListener("visibilitychange", handleVisibilityChange);
             timerInterval = setInterval(() => {
-                let elapsedTime = (new Date() - startTime) / 1000;
+                let currentTime = new Date();
+                let elapsedTime = (currentTime - startTime) / 1000;
+                if (lastPausedTime) {
+                    elapsedTime -= (currentTime - lastPausedTime) / 1000;
+                }
                 document.getElementById("timer").innerText = formatTime(elapsedTime);
             }, 10);
         }
 
         function handleVisibilityChange() {
             if (document.visibilityState === "hidden") {
-                stopTimer();
+                lastPausedTime = new Date();
+            } else if (document.visibilityState === "visible" && lastPausedTime) {
+                let pauseDuration = new Date() - lastPausedTime;
+                startTime = new Date(startTime.getTime() + pauseDuration);
+                lastPausedTime = null;
             }
-        }, 10);
-        }, 10);
         }
 
         function formatTime(time) {
