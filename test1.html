@@ -138,14 +138,14 @@
             }
         }
         function startTimer() {
-            startTime = new Date();
+            startTime = performance.now();
             lastPausedTime = null;
             document.addEventListener("visibilitychange", handleVisibilityChange);
             timerInterval = setInterval(() => {
-                let currentTime = new Date();
+                let currentTime = performance.now();
                 let elapsedTime = (currentTime - startTime) / 1000;
                 if (lastPausedTime) {
-                    elapsedTime -= (currentTime - lastPausedTime) / 1000;
+                    elapsedTime -= (performance.now() - lastPausedTime) / 1000;
                 }
                 document.getElementById("timer").innerText = formatTime(elapsedTime);
             }, 10);
