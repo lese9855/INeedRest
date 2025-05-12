@@ -44,12 +44,11 @@
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
         #rankingTable th { background-color: #f4f4f4; }
-        body.bg1 { background: url('./background1.html') no-repeat center center / cover; }
-        body.bg2 { background: url('./background2.html') no-repeat center center / cover; }
-        body.bg3 { background: url('./background3.html') no-repeat center center / cover; }
+        iframe { width: 100vw; height: 100vh; border: none; position: fixed; top: 0; left: 0; z-index: -1; }
     </style>
 </head>
-<body class="bg1">
+<body>
+    <iframe id="backgroundFrame" src="background1.html"></iframe>
     <h1>I Need Rest</h1>
 
     <div id="nicknameContainer">
@@ -106,13 +105,14 @@
         let timerInterval;
         let initialBeta = null;
         let initialGamma = null;
-
-        function switchBackground(className) {
-            document.body.className = className;
+        
+        function switchBackground(filename) {
+            const backgroundFrame = document.getElementById('backgroundFrame');
+            backgroundFrame.src = filename;
         }
 
         window.addEventListener('load', () => {
-            switchBackground('bg1');
+            switchBackground('background1.html');
         });
 
         document.getElementById("nicknameSubmit").addEventListener("click", async function() {
@@ -145,7 +145,7 @@
                 try {
                     const permissionState = await DeviceOrientationEvent.requestPermission();
                     if (permissionState === "granted") {
-                        switchBackground('bg2');
+                        switchBackground('background2.html');
                         startTimer();
                         startGyroscope();
                     } else {
@@ -204,7 +204,7 @@
 
                 if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
                     stopTimer();
-                    switchBackground('bg3');
+                    switchBackground('background3.html');
                 }
             });
         }
