@@ -9,6 +9,7 @@
         h1 { font-size: 32px; font-weight: bold; margin-bottom: 20px; }
         #nicknameContainer { margin-top: 20px; }
         #nicknameInput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
+        #majorInput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
         #nicknameSubmit { 
             display: block; 
             margin: 20px auto; 
@@ -49,8 +50,10 @@
     <h1>I Need Rest</h1>
 
     <div id="nicknameContainer">
-        <p>닉네임을 입력하세요:</p>
+        <p>이름을 입력해주세요:</p>
         <input type="text" id="nicknameInput" placeholder="닉네임 입력">
+        <p>학과를 입력해주세요:</p>
+        <input type="text" id="majorInput" placeholder="학과 입력">
         <button id="nicknameSubmit">Time to Chill</button>
     </div>
 
@@ -93,6 +96,7 @@
         const db = getDatabase(app);
 
         let nickname = "";
+        let majorname = "";
         let startTime;
         let isTimerStopped = false;
         let timerInterval;
@@ -102,7 +106,12 @@
         document.getElementById("nicknameSubmit").addEventListener("click", async function() {
             nickname = document.getElementById("nicknameInput").value.trim();
             if (nickname === "") {
-                alert("닉네임을 입력해주세요!");
+                alert("성명을 입력해주세요!");
+                return;
+            }
+            majorname = document.getElementById("majorInput").value.trim();
+            if (majorname === "") {
+                alert("학과를 입력해주세요!");
                 return;
             }
 
@@ -110,6 +119,7 @@
             if (!confirmed) return;
 
             localStorage.setItem("nickname", nickname);
+            localStorage.setItem("majorname", majorname);
             document.getElementById("nicknameContainer").style.display = "none";
 
             document.getElementById("data").style.display = "block";
@@ -198,7 +208,7 @@
             document.getElementById("timer").style.display = "none";
             document.getElementById("retryButton").style.display = "block";
 
-            await push(ref(db, "scores"), { nickname: nickname, time: finalElapsedTime });
+            await push(ref(db, "scores"), { nickname: nickname, majorname: majorname, time: finalElapsedTime });
             setTimeout(loadLeaderboard, 1000);
         }
 
@@ -223,7 +233,7 @@
                 let list = document.getElementById("rankingBody");
                 list.innerHTML = "";
                 scores.forEach((score, index) => {
-                    list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${formatTime(score.time)}</td></tr>`;
+                    list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${score.majorname}</td><td>${formatTime(score.time)}</td></tr>`;
                 });
 
             } catch (error) {
