@@ -96,10 +96,6 @@
         let startTime;
         let isTimerStopped = false;
         let timerInterval;
-        let elapsedPauseTime = 0;
-        let totalPausedTime = 0;
-        let lastPausedTime = null;
-        let finalRecordedTime = 0;
         let initialBeta = null;
         let initialGamma = null;
 
@@ -143,26 +139,11 @@
         
         function startTimer() {
             startTime = new Date();
-            totalPausedTime = 0;
-            lastPausedTime = null;
             isTimerStopped = false;
-            finalRecordedTime = 0;
             initialBeta = null;
             initialGamma = null;
 
-            document.addEventListener("visibilitychange", handleVisibilityChange);
-
             timerInterval = setInterval(updateTimer, 10);
-        }
-        
-        function handleVisibilityChange() {
-            if (document.visibilityState === "hidden") {
-                lastPausedTime = new Date();
-            } else if (document.visibilityState === "visible" && lastPausedTime) {
-                // 누적 일시정지 시간 더하기
-                totalPausedTime += new Date() - lastPausedTime;
-                lastPausedTime = null;
-            }
         }
 
         function updateTimer() {
@@ -209,7 +190,6 @@
 
             const now = new Date();
             const finalElapsedTime = (now - startTime - totalPausedTime) / 1000;
-            finalRecordedTime = finalElapsedTime;
             
             document.getElementById("finalTime").style.display = "block";
             document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(finalElapsedTime)}`;
