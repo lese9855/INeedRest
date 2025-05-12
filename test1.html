@@ -138,27 +138,33 @@
                 startGyroscope();
             }
         }
+        
         function startTimer() {
             startTime = new Date();
+            totalPausedTime = 0;
             lastPausedTime = null;
-            elapsedPauseTime = 0;  // 누적 일시정지 시간
+            isTimerStopped = false;
+
             document.addEventListener("visibilitychange", handleVisibilityChange);
 
-            timerInterval = setInterval(() => {
-                let currentTime = new Date();
-                let elapsedTime = (currentTime - startTime - elapsedPauseTime) / 1000;
-                document.getElementById("timer").innerText = formatTime(elapsedTime);
-            }, 10);
+            timerInterval = setInterval(updateTimer, 10);
         }
         
         function handleVisibilityChange() {
             if (document.visibilityState === "hidden") {
                 lastPausedTime = new Date();
             } else if (document.visibilityState === "visible" && lastPausedTime) {
-                // 총 일시정지 시간을 누적하여 빼줌
-                elapsedPauseTime += new Date() - lastPausedTime;
+                // 누적 일시정지 시간 더하기
+                totalPausedTime += new Date() - lastPausedTime;
                 lastPausedTime = null;
             }
+        }
+
+        function updateTimer() {
+            if (isTimerStopped) return;
+            const now = new Date();
+            const elapsedTime = (now - startTime - totalPausedTime) / 1000;
+            document.getElementById("timer").innerText = formatTime(elapsedTime);
         }
 
         function formatTime(time) {
@@ -194,18 +200,17 @@
         async function stopTimer() {
             if (isTimerStopped) return;
             isTimerStopped = true;
-
             clearInterval(timerInterval);
-            let finalTime = (new Date() - startTime - elapsedPauseTime) / 1000;
 
+            const finalElapsedTime = (new Date() - startTime - totalPausedTime) / 1000;
             document.getElementById("finalTime").style.display = "block";
-            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(finalTime)}`;
+            document.getElementById("finalTime").innerText = `⏱️ 종료된 타이머: ${formatTime(finalElapsedTime)}`;
             document.getElementById("rankingTable").style.display = "table";
             document.getElementById("data").style.display = "none";
             document.getElementById("timer").style.display = "none";
             document.getElementById("retryButton").style.display = "block";
 
-            await push(ref(db, "scores"), { nickname: nickname, time: finalTime });
+            await push(ref(db, "scores"), { nickname: nickname, time: finalElapsedTime });
             setTimeout(loadLeaderboard, 1000);
         }
 
