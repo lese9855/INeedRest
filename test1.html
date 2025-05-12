@@ -94,11 +94,12 @@
 
         let nickname = "";
         let startTime;
-        let elapsedPauseTime = 0;
+        let isTimerStopped = false;
         let timerInterval;
+        let elapsedPauseTime = 0;
         let totalPausedTime = 0;
         let lastPausedTime = null;
-        let isTimerStopped = false;
+        let finalRecordedTime = 0;
         let initialBeta = null;
         let initialGamma = null;
 
@@ -145,6 +146,9 @@
             totalPausedTime = 0;
             lastPausedTime = null;
             isTimerStopped = false;
+            finalRecordedTime = 0;
+            initialBeta = null;
+            initialGamma = null;
 
             document.addEventListener("visibilitychange", handleVisibilityChange);
 
