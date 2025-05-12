@@ -77,12 +77,13 @@
                     // ✅ 랭킹 리스트 업데이트
                     let rankingHTML = "";
                     scores.forEach((score, index) => {
+                        const formattedTime = formatTime(score.time);
                         rankingHTML += `
                             <tr>
                                 <td>${index + 1}</td>
                                 <td>${score.nickname}</td>
                                 <td>${score.majorname}</td>
-                                <td>${score.time.toFixed(2)}</td>
+                                <td>${formattedTime}</td>
                             </tr>
                         `;
                     });
@@ -110,6 +111,12 @@
             };
 
             updateRanking();
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${remainingSeconds.toFixed(2).padStart(5, '0')}`;
         }
 
         // ✅ 실시간 랭킹 로드
