@@ -66,6 +66,9 @@
     <script>
         function moveEyes(event) {
             const eyes = document.querySelectorAll('.eye');
+            const x = event.touches ? event.touches[0].clientX : event.clientX;
+            const y = event.touches ? event.touches[0].clientY : event.clientY;
+        
             eyes.forEach(eye => {
                 const pupil = eye.querySelector('.pupil');
                 const rect = eye.getBoundingClientRect();
@@ -73,14 +76,15 @@
                 const eyeCenterY = rect.top + rect.height / 2;
                 const maxDistanceX = (rect.width - pupil.offsetWidth) / 2 - 4;
                 const maxDistanceY = (rect.height - pupil.offsetHeight) / 2 - 4;
-                const angle = Math.atan2(event.clientY - eyeCenterY, event.clientX - eyeCenterX);
-                const distanceX = Math.cos(angle) * Math.min(maxDistanceX, Math.abs(event.clientX - eyeCenterX));
-                const distanceY = Math.sin(angle) * Math.min(maxDistanceY, Math.abs(event.clientY - eyeCenterY));
+                const angle = Math.atan2(y - eyeCenterY, x - eyeCenterX);
+                const distanceX = Math.cos(angle) * Math.min(maxDistanceX, Math.abs(x - eyeCenterX));
+                const distanceY = Math.sin(angle) * Math.min(maxDistanceY, Math.abs(y - eyeCenterY));
                 pupil.style.transform = `translate(${distanceX}px, ${distanceY}px)`;
             });
         }
 
         window.addEventListener('mousemove', moveEyes);
+        window.addEventListener('touchmove', moveEyes);
     </script>
 </body>
 </html>
