@@ -6,7 +6,7 @@
     <title>I Need Rest</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        h1 { font-size: 32px; font-weight: bold; margin-bottom: 20px; }
+        h1 { font-size: 32px; font-weight: bold; margin-top: 45vh; margin-bottom: 20px; color: DeepSkyBlue; }
         #nicknameContainer { margin-top: 20px; }
         #nicknameInput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
         #majorInput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
@@ -38,20 +38,23 @@
         }
         #retryButton:hover { background-color: #e63e3e; }
 
-        #timer { font-size: 48px; font-weight: bold; margin-top: 10px; display: none; }
-        #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; }
+        #timer { font-size: 48px; font-weight: bold; margin-top: 10px; display: none; color: white; }
+        #data { font-size: 20px; font-weight: bold; margin-top: 10px; display: none; color: transparent; }
         #finalTime { display: none; font-size: 22px; font-weight: bold; margin-top: 20px; color: blue; }
         #rankingTable { display: none; width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
         #rankingTable th { background-color: #f4f4f4; }
+        #rankingTable td { background-color: white; }
+        iframe { width: 100vw; height: 100vh; border: none; position: fixed; top: 0; left: 0; z-index: -1; touch-action: auto; }
     </style>
 </head>
 <body>
+    <iframe id="backgroundFrame" src="background1.html"></iframe>
     <h1>I Need Rest</h1>
 
     <div id="nicknameContainer">
         <p>이름을 입력해주세요:</p>
-        <input type="text" id="nicknameInput" placeholder="닉네임 입력">
+        <input type="text" id="nicknameInput" placeholder="이름 입력">
         <p>학과를 입력해주세요:</p>
         <input type="text" id="majorInput" placeholder="학과 입력">
         <button id="nicknameSubmit">Time to Chill</button>
@@ -65,7 +68,7 @@
         <thead>
             <tr>
                 <th>순위</th>
-                <th>성명</th>
+                <th>이름</th>
                 <th>학과</th>
                 <th>타이머 시간</th>
             </tr>
@@ -103,6 +106,15 @@
         let timerInterval;
         let initialBeta = null;
         let initialGamma = null;
+        
+        function switchBackground(filename) {
+            const backgroundFrame = document.getElementById('backgroundFrame');
+            backgroundFrame.src = filename;
+        }
+
+        window.addEventListener('load', () => {
+            switchBackground('background1.html');
+        });
 
         document.getElementById("nicknameSubmit").addEventListener("click", async function() {
             nickname = document.getElementById("nicknameInput").value.trim();
@@ -134,6 +146,7 @@
                 try {
                     const permissionState = await DeviceOrientationEvent.requestPermission();
                     if (permissionState === "granted") {
+                        switchBackground('background2.html');
                         startTimer();
                         startGyroscope();
                     } else {
@@ -192,6 +205,7 @@
 
                 if (Math.abs(beta - initialBeta) > 1 || Math.abs(gamma - initialGamma) > 1) {
                     stopTimer();
+                    switchBackground('background3.html');
                 }
             });
         }
