@@ -45,7 +45,7 @@
         #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
         #rankingTable th { background-color: #f4f4f4; }
         #rankingTable td { background-color: white; }
-        iframe { width: 100vw; height: 100vh; border: none; position: fixed; top: 0; left: 0; z-index: -1; }
+        iframe { width: 100vw; height: 100vh; border: none; position: fixed; top: 0; left: 0; z-index: -1; touch-action: auto; }
     </style>
 </head>
 <body>
@@ -54,7 +54,7 @@
 
     <div id="nicknameContainer">
         <p>이름을 입력해주세요:</p>
-        <input type="text" id="nicknameInput" placeholder="닉네임 입력">
+        <input type="text" id="nicknameInput" placeholder="이름 입력">
         <p>학과를 입력해주세요:</p>
         <input type="text" id="majorInput" placeholder="학과 입력">
         <button id="nicknameSubmit">Time to Chill</button>
@@ -68,7 +68,7 @@
         <thead>
             <tr>
                 <th>순위</th>
-                <th>성명</th>
+                <th>이름</th>
                 <th>학과</th>
                 <th>타이머 시간</th>
             </tr>
