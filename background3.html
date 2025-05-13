@@ -61,12 +61,12 @@
             background: linear-gradient(to bottom, #5D0000 40px, #8B0000 40px); /* 색깔 순서 수정 */
             border-top: 4px solid black;
             position: absolute;
-            top: calc(-65vh + 100vh);
+            bottom: -65vh;
             z-index: 1;
         }
         @keyframes blanketDown {
-            from { top: calc(-65vh + 100vh); }
-            to { top: 100vh; }
+            from { bottom: -65vh; }
+            to { bottom: 0; }
         }
     </style>
 </head>
