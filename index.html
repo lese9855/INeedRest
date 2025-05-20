@@ -9,7 +9,7 @@
         h1 { font-size: 32px; font-weight: bold; margin-top: 45vh; margin-bottom: 20px; color: DeepSkyBlue; }
         #nicknameContainer { margin-top: 20px; }
         #nicknameInput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
-        #majorInput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
+        #chillinput { padding: 12px; font-size: 18px; width: 250px; text-align: center; }
         #nicknameSubmit { 
             display: block; 
             margin: 20px auto; 
@@ -54,9 +54,9 @@
 
     <div id="nicknameContainer">
         <p>이름을 입력해주세요:</p>
-        <input type="text" id="nicknameInput" placeholder="이름 입력">
-        <p>학과를 입력해주세요:</p>
-        <input type="text" id="majorInput" placeholder="학과 입력">
+        <input type="text" id="nicknameInput" placeholder="이름 입력!">
+        <p>저 쉬는 동한 무얼 하실건가요?:</p>
+        <input type="text" id="chillinput" placeholder="당신의 Chill!">
         <button id="nicknameSubmit">Time to Chill</button>
     </div>
 
@@ -69,7 +69,7 @@
             <tr>
                 <th>순위</th>
                 <th>이름</th>
-                <th>학과</th>
+                <th>내가 한 Chill</th>
                 <th>타이머 시간</th>
             </tr>
         </thead>
@@ -100,7 +100,7 @@
         const db = getDatabase(app);
 
         let nickname = "";
-        let majorname = "";
+        let chillname = "";
         let startTime;
         let isTimerStopped = false;
         let timerInterval;
@@ -119,12 +119,12 @@
         document.getElementById("nicknameSubmit").addEventListener("click", async function() {
             nickname = document.getElementById("nicknameInput").value.trim();
             if (nickname === "") {
-                alert("성명을 입력해주세요!");
+                alert("이름이 비었어요!");
                 return;
             }
-            majorname = document.getElementById("majorInput").value.trim();
-            if (majorname === "") {
-                alert("학과를 입력해주세요!");
+            chillname = document.getElementById("chillinput").value.trim();
+            if (chillname === "") {
+                alert("무슨 Chill을 할지 알려주세요!");
                 return;
             }
 
@@ -132,7 +132,7 @@
             if (!confirmed) return;
 
             localStorage.setItem("nickname", nickname);
-            localStorage.setItem("majorname", majorname);
+            localStorage.setItem("chillname", chillname);
             document.getElementById("nicknameContainer").style.display = "none";
 
             document.getElementById("data").style.display = "block";
@@ -224,7 +224,7 @@
             document.getElementById("timer").style.display = "none";
             document.getElementById("retryButton").style.display = "block";
 
-            await push(ref(db, "scores"), { nickname: nickname, majorname: majorname, time: finalElapsedTime });
+            await push(ref(db, "scores"), { nickname: nickname, chillname: chillname, time: finalElapsedTime });
             setTimeout(loadLeaderboard, 1000);
         }
 
@@ -249,7 +249,7 @@
                 let list = document.getElementById("rankingBody");
                 list.innerHTML = "";
                 scores.forEach((score, index) => {
-                    list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${score.majorname}</td><td>${formatTime(score.time)}</td></tr>`;
+                    list.innerHTML += `<tr><td>${index + 1}위</td><td>${score.nickname}</td><td>${score.chillname}</td><td>${formatTime(score.time)}</td></tr>`;
                 });
 
             } catch (error) {
