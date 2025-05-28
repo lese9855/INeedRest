@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>디지털 루프</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+            background-color: black;
+        }
+        iframe, img {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <img id="calendar" src="Calendar_June.jpg" style="display: block;">
+    <iframe id="ranking" src="ranking.html" style="display: none;"></iframe>
+
+    <script>
+        const calendar = document.getElementById("calendar");
+        const ranking = document.getElementById("ranking");
+
+        let showingCalendar = true;
+
+        function switchView() {
+            if (showingCalendar) {
+                calendar.style.display = "none";
+                ranking.style.display = "block";
+                setTimeout(switchView, 2 * 60 * 1000); // 2분 후 이미지로 전환
+            } else {
+                ranking.style.display = "none";
+                calendar.style.display = "block";
+                setTimeout(switchView, 4 * 60 * 1000); // 4분 후 랭킹으로 전환
+            }
+            showingCalendar = !showingCalendar;
+        }
+
+        setTimeout(switchView, 4 * 60 * 1000); // 첫 전환은 4분 후
+    </script>
+
+</body>
+</html>
