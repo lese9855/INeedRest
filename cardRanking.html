@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hall of Rest</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+        }
+
+        .ranking-wrapper {
+            width: 90%;
+            max-width: 600px;
+            margin: 40px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ranking-row {
+            background-color: #004c97;
+            border-radius: 10px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            font-size: 1.4rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .rank {
+            width: 40px;
+            font-size: 1.6rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .nickname {
+            flex: 1;
+            padding-left: 10px;
+            font-weight: 600;
+        }
+
+        .chillname {
+            font-style: italic;
+            font-size: 1.2rem;
+            color: #e0f7ff;
+        }
+
+        #errorMessage {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ranking-wrapper" id="rankingBody">
+        <div class="ranking-row"><div>⏳ 로딩 중...</div></div>
+    </div>
+    <p id="errorMessage"></p>
+
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getDatabase, ref, query, orderByChild, limitToLast, onValue, off } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3F1EUknmuJ9UB1XLfde4YRzqU3pyEE-c",
+            authDomain: "ineedrest-1c987.firebaseapp.com",
+            databaseURL: "https://ineedrest-1c987-default-rtdb.firebaseio.com",
+            projectId: "ineedrest-1c987",
+            storageBucket: "ineedrest-1c987.appspot.com",
+            messagingSenderId: "1076501106165",
+            appId: "1:1076501106165:web:970dfee4b57b95c41f64bc",
+            measurementId: "G-XBM8PZDMW2"
+        };
+
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const scoresRef = query(ref(db, "scores"), orderByChild("time"), limitToLast(10));
+
+        const rankingBody = document.getElementById("rankingBody");
+        const errorMessage = document.getElementById("errorMessage");
+
+        function getRankIcon(index) {
+            return index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1;
+        }
+
+        function renderRanking(scores) {
+            rankingBody.innerHTML = "";
+            scores.forEach((score, index) => {
+                const row = document.createElement("div");
+                row.className = "ranking-row";
+                row.innerHTML = `
+                    <div class="rank">${getRankIcon(index)}</div>
+                    <div class="nickname">${score.nickname}</div>
+                    <div class="chillname">${score.chillname}</div>
+                `;
+                rankingBody.appendChild(row);
+            });
+        }
+
+        function loadRankingRealTime() {
+            onValue(scoresRef, (snapshot) => {
+                if (!snapshot.exists()) {
+                    rankingBody.innerHTML = "<div class='ranking-row'><div>❌ 데이터 없음</div></div>";
+                    return;
+                }
+
+                let scores = [];
+                snapshot.forEach(child => {
+                    scores.push(child.val());
+                });
+
+                // 시간 순 내림차순 정렬
+                scores.sort((a, b) => b.time - a.time);
+
+                renderRanking(scores);
+            }, (error) => {
+                errorMessage.style.display = "block";
+                errorMessage.textContent = `❌ 오류 발생: ${error.message}`;
+            });
+        }
+
+        loadRankingRealTime();
+    </script>
+
+</body>
+</html>
