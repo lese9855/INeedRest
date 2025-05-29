@@ -31,6 +31,19 @@
             opacity: 0.9;
         }
 
+        #footer-credit {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            color: #999;
+            font-style: italic;
+            opacity: 0.8;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
         .full-message {
             text-align: center;
             font-size: 1.4rem;
@@ -102,6 +115,7 @@
     <div class="ranking-wrapper" id="rankingBody"></div>
     <img id="footer-image" src="restPhone.png" alt="restYourPhone" />
     <p id="errorMessage"></p>
+    <div id="footer-credit">Project by Seunghwan Lee</div>
 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
