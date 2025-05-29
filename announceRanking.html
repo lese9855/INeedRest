@@ -29,7 +29,7 @@
             left: 5vw;
             right: 5vw;
             height: 8px;
-            background-color: #333;
+            background-color: #cbcfd2;
             z-index: 9999;
             overflow: visible;
             border-radius: 4px;
@@ -38,7 +38,7 @@
         #progressBar {
             height: 100%;
             width: 0%;
-            background-color: #00ffcc;
+            background-color: #ff0000;
             transition: width linear;
             border-radius: 4px;
         }
@@ -49,7 +49,7 @@
             left: 0%;
             width: 16px;
             height: 16px;
-            background-color: #00ffcc;
+            background-color: #ff0000;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             transition: left linear;
@@ -105,14 +105,14 @@
         } else {
             ranking.style.display = "none";
             calendar.style.display = "block";
-            startProgress(4 * 60 * 1000); // 4분짜리 진행 바
-            setTimeout(switchView, 4 * 60 * 1000);
+            startProgress(3 * 60 * 1000); // 3분짜리 진행 바
+            setTimeout(switchView, 3 * 60 * 1000);
         }
         showingCalendar = !showingCalendar;
     }
 
-    startProgress(4 * 60 * 1000); // 첫 시작은 4분
-    setTimeout(switchView, 4 * 60 * 1000);
+    startProgress(3 * 60 * 1000); // 첫 시작은 3분
+    setTimeout(switchView, 3 * 60 * 1000);
 </script>
 
 </body>
