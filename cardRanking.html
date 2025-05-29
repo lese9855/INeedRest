@@ -31,45 +31,37 @@
         }
 
         .ranking-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 2fr 1fr;
+            align-items: center;
             background-color: #004c97;
             border-radius: 10px;
             padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             color: white;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            gap: 12px;
         }
 
         .rank {
-            width: 40px;
-            font-size: 1.6rem;
             text-align: center;
             font-weight: bold;
+            font-size: 1.6rem;
         }
 
         .nickname {
-            flex: 1;
-            padding-left: 10px;
             font-weight: 600;
         }
 
-        .chillname-time {
-            text-align: right;
-            font-size: 1.2rem;
-            color: #ffffff;
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            align-items: center;
+        .chillname {
             font-style: italic;
+            color: #ffffff;
         }
 
-        .chillname-time .time {
-            font-style: normal;
+        .time {
             font-weight: bold;
             color: #ffffff;
+            text-align: right;
         }
 
         #errorMessage {
@@ -152,7 +144,8 @@
                 row.innerHTML = `
                     <div class="rank">${getRankIcon(index)}</div>
                     <div class="nickname">${score.nickname}</div>
-                    <div class="chillname-time">${score.chillname} <span class="time"> ${formattedTime}</span></div>
+                    <div class="chillname">${score.chillname}</div>
+                    <div class="time">${formattedTime}</div>
                 `;
                 rankingBody.appendChild(row);
             });
