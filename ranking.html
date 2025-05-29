@@ -5,33 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hall of Rest</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: white; }
-        #rankingTable { width: 100%; max-width: 500px; margin: 20px auto; border-collapse: collapse; }
-        #rankingTable th, #rankingTable td { border: 1px solid black; padding: 8px; text-align: center; }
-        #rankingTable th { background-color: #f4f4f4; }
-        #errorMessage { color: red; font-weight: bold; margin-top: 20px; display: none; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        body {
+            position: relative;
+        }
+        #container {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5em;
+        }
+        p {
+            font-size: 1.5rem;
+            margin-bottom: 1em;
+        }
+        #rankingTable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.6rem;
+        }
+        #rankingTable th,
+        #rankingTable td {
+            border: 2px solid black;
+            padding: 20px;
+            text-align: center;
+        }
+        #rankingTable th {
+            background-color: #f0f0f0;
+        }
+        #errorMessage {
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <h1>🏆 Hall of Rest 🏆</h1>
-    <p>the Top 10 players</p>
+    <div id="container">
+        <h1>🏆 Hall of Rest 🏆</h1>
+        <p>the Top 10 players</p>
 
-    <table id="rankingTable">
-        <thead>
-            <tr>
-                <th>순위</th>
-                <th>성명</th>
-                <th>내가 한 Chill</th>
-                <th>타이머 시간 (초)</th>
-            </tr>
-        </thead>
-        <tbody id="rankingBody">
-            <tr><td colspan="4">🔄 데이터 로딩 중...</td></tr>
-        </tbody>
-    </table>
+        <table id="rankingTable">
+            <thead>
+                <tr>
+                    <th>순위</th>
+                    <th>성명</th>
+                    <th>내가 한 Chill</th>
+                    <th>타이머 시간 (초)</th>
+                </tr>
+            </thead>
+            <tbody id="rankingBody">
+                <tr><td colspan="4">🔄 데이터 로딩 중...</td></tr>
+            </tbody>
+        </table>
 
-    <p id="errorMessage"></p>
-
+        <p id="errorMessage"></p>
+    </div>
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
         import { getDatabase, ref, query, orderByChild, limitToLast, onValue, off } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
