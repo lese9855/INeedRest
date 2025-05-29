@@ -10,6 +10,15 @@
             padding: 0;
             font-family: Arial, sans-serif;
             background-color: #f0f4f8;
+            color: #00aadd;
+            text-align: center;
+        }
+
+        #page-title {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 40px 0 20px;
+            color: #003366;
         }
 
         .ranking-wrapper {
@@ -47,11 +56,19 @@
         }
 
         .chillname-time {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
             text-align: right;
             font-size: 1.2rem;
+            color: #ffffff;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            align-items: center;
+            font-style: italic;
+        }
+
+        .chillname-time .time {
+            font-style: normal;
+            font-weight: bold;
             color: #ffffff;
         }
 
@@ -65,7 +82,8 @@
     </style>
 </head>
 <body>
-
+    <h1 id="page-title">HALL OF REST</h1>
+    
     <div class="ranking-wrapper" id="rankingBody">
         <div class="ranking-row"><div>⏳ 로딩 중...</div></div>
     </div>
@@ -102,6 +120,27 @@
             const remaining = (seconds % 60).toFixed(2);
             return `${String(minutes).padStart(2, '0')}:${remaining.padStart(5, '0')}`;
         }
+
+        function getBackgroundColor(index) {
+            // 진한 파랑 → 연한 파랑 (HSV → HSL 기반 그라데이션 느낌)
+            const base = 0x004c97;
+            const end = 0x99ccff;
+            const percent = index / 9; // 0 (1위) ~ 1 (10위)
+
+            const r1 = (base >> 16) & 0xff;
+            const g1 = (base >> 8) & 0xff;
+            const b1 = base & 0xff;
+
+            const r2 = (end >> 16) & 0xff;
+            const g2 = (end >> 8) & 0xff;
+            const b2 = end & 0xff;
+
+            const r = Math.round(r1 + (r2 - r1) * percent);
+            const g = Math.round(g1 + (g2 - g1) * percent);
+            const b = Math.round(b1 + (b2 - b1) * percent);
+
+            return `rgb(${r}, ${g}, ${b})`;
+        }
         
         function renderRanking(scores) {
             rankingBody.innerHTML = "";
@@ -109,13 +148,11 @@
                 const formattedTime = formatTime(score.time);
                 const row = document.createElement("div");
                 row.className = "ranking-row";
+                row.style.backgroundColor = getBackgroundColor(index);
                 row.innerHTML = `
                     <div class="rank">${getRankIcon(index)}</div>
                     <div class="nickname">${score.nickname}</div>
-                    <div class="chillname-time">
-                        <div>${score.chillname}</div>
-                        <div>${formattedTime}</div>
-                    </div>
+                    <div class="chillname-time">${score.chillname} <span class="time"> ${formattedTime}</span></div>
                 `;
                 rankingBody.appendChild(row);
             });
