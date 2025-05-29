@@ -15,6 +15,13 @@
             align-items: center;
             justify-content: center;
         }
+
+        .rotate-wrapper {
+            width: 100vh;
+            height: 100vw;
+            transform: rotate(90deg);
+            transform-origin: center;
+        }
         
         #progressBarContainer {
             position: absolute;
@@ -23,6 +30,8 @@
             width: 100%;
             height: 8px;
             background-color: #333;
+            z-index: 9999;
+            overflow: visible;
         }
 
         #progressBar {
@@ -30,13 +39,19 @@
             width: 0%;
             background-color: #00ffcc;
             transition: width linear;
+            border-radius: 4px;
         }
 
-        .rotate-wrapper {
-            width: 100vh;
-            height: 100vw;
-            transform: rotate(90deg);
-            transform-origin: center;
+        #progressHandle {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            width: 16px;
+            height: 16px;
+            background-color: #00ffcc;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: left linear;
         }
 
         iframe, img {
@@ -52,9 +67,11 @@
 <div class="rotate-wrapper">
     <img id="calendar" src="Calendar_June.jpg" style="display: block;">
     <iframe id="ranking" src="ranking.html" style="display: none;"></iframe>
-</div>
-<div id="progressBarContainer">
-    <div id="progressBar"></div>
+
+    <div id="progressBarContainer">
+        <div id="progressBar"></div>
+        <div id="progressHandle"></div>
+    </div>
 </div>
 
 <script>
@@ -66,11 +83,16 @@
 
     function startProgress(duration) {
         progressBar.style.transition = 'none';
+        progressHandle.style.transition = 'none';
         progressBar.style.width = '0%'; // 초기화
+        progressHandle.style.left = '0%';
         void progressBar.offsetWidth;   // 리플로우 강제
+        void progressHandle.offsetWidth;
 
         progressBar.style.transition = `width ${duration}ms linear`;
+        progressHandle.style.transition = `left ${duration}ms linear`;
         progressBar.style.width = '100%';
+        progressHandle.style.left = '100%';
     }
 
     function switchView() {
