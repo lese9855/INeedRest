@@ -22,10 +22,16 @@
         }
 
         .full-message {
-            grid-column: 1 / -1; /* 전체 열을 다 차지하도록 */
             text-align: center;
             font-size: 1.4rem;
             padding: 20px;
+            background-color: #eeeeee;
+            color: #333;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .ranking-wrapper {
@@ -82,8 +88,8 @@
 </head>
 <body>
     <h1 id="page-title">🏆HALL OF REST🏆</h1>
+    <div id="loadingMessage" class="ranking-row full-message">⏳ 로딩 중...</div>
     <div class="ranking-wrapper" id="rankingBody">
-        <div class="ranking-row full-message">⏳ 로딩 중...</div>
     </div>
     <p id="errorMessage"></p>
 
@@ -141,9 +147,9 @@
         }
         
         function renderRanking(scores) {
-            rankingBody.innerHTML = `
-                <div class="ranking-row full-message">⏳ 로딩 중...</div>
-            `;
+            const loadingEl = document.getElementById("loadingMessage");
+            if (loadingEl) loadingEl.remove();  // ✅ 로딩 메시지 제거
+            rankingBody.innerHTML = "";
             scores.forEach((score, index) => {
                 const formattedTime = formatTime(score.time);
                 const row = document.createElement("div");
