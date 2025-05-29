@@ -82,7 +82,9 @@
 </head>
 <body>
     <h1 id="page-title">HALL OF REST</h1>
-    
+    <div class="ranking-wrapper" id="rankingBody">
+        <div class="ranking-row full-message">⏳ 로딩 중...</div>
+    </div>
     <p id="errorMessage"></p>
 
     <script type="module">
@@ -139,9 +141,9 @@
         }
         
         function renderRanking(scores) {
-            rankingBody.innerHTML = "
+            rankingBody.innerHTML = `
                 <div class="ranking-row full-message">⏳ 로딩 중...</div>
-            ";
+            `;
             scores.forEach((score, index) => {
                 const formattedTime = formatTime(score.time);
                 const row = document.createElement("div");
