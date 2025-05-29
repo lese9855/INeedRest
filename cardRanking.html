@@ -46,10 +46,13 @@
             font-weight: 600;
         }
 
-        .chillname {
-            font-style: italic;
+        .chillname-time {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
             font-size: 1.2rem;
-            color: #e0f7ff;
+            color: #ffffff;
         }
 
         #errorMessage {
@@ -94,15 +97,25 @@
             return index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1;
         }
 
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remaining = (seconds % 60).toFixed(2);
+            return `${String(minutes).padStart(2, '0')}:${remaining.padStart(5, '0')}`;
+        }
+        
         function renderRanking(scores) {
             rankingBody.innerHTML = "";
             scores.forEach((score, index) => {
+                const formattedTime = formatTime(score.time);
                 const row = document.createElement("div");
                 row.className = "ranking-row";
                 row.innerHTML = `
                     <div class="rank">${getRankIcon(index)}</div>
                     <div class="nickname">${score.nickname}</div>
-                    <div class="chillname">${score.chillname}</div>
+                    <div class="chillname-time">
+                        <div>${score.chillname}</div>
+                        <div>${formattedTime}</div>
+                    </div>
                 `;
                 rankingBody.appendChild(row);
             });
